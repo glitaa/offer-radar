@@ -33,7 +33,7 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
                 f"[bold]Location:[/bold] {listing.location or 'N/A'}\n"
                 f"[bold]URL:[/bold] {listing.url}\n\n"
                 f"{snippet}\n\n"
-                f"[cyan][s] Save  [r] Reject  [k] Skip  [q] Quit[/cyan]"
+                f"[cyan](s) Save  (r) Reject  (k) Skip  (q) Quit[/cyan]"
             )
             
             console.print(Panel(content, title=f"[bold green]{listing.title}[/bold green]", expand=False))
