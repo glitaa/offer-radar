@@ -24,10 +24,11 @@ async def test_fetch_listings_success(mock_get, mock_delay, scraper):
     # Mock first page
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
-    mock_response.text = '''
-    <html><body><script id="__NEXT_DATA__" type="application/json">
-    {"props": {"pageProps": {"data": {"ads": [{"url": "http://olx.pl/1", "title": "Test"}], "pagination": {"currentPage": 1, "totalPages": 1}}}}}
-    </script></body></html>
+    import json
+    state_dict = {"listing": {"listing": {"ads": [{"url": "http://olx.pl/1", "title": "Test"}], "pagination": {"currentPage": 1, "totalPages": 1}}}}
+    escaped_str = json.dumps(state_dict).replace("/", "\\/").replace('"', '\\"')
+    mock_response.text = f'''
+    <html><body><script>window.__PRERENDERED_STATE__="{escaped_str}";</script></body></html>
     '''
     mock_get.return_value = mock_response
 
@@ -60,10 +61,11 @@ async def test_fetch_listings_graceful_degradation_pagination(mock_get, mock_del
     # Mock page 1 success, page 2 429 Blocked
     mock_response_p1 = MagicMock(spec=httpx.Response)
     mock_response_p1.status_code = 200
-    mock_response_p1.text = '''
-    <html><body><script id="__NEXT_DATA__" type="application/json">
-    {"props": {"pageProps": {"data": {"ads": [{"url": "http://olx.pl/1", "title": "Test1"}], "pagination": {"currentPage": 1, "totalPages": 2}}}}}
-    </script></body></html>
+    import json
+    state_dict = {"listing": {"listing": {"ads": [{"url": "http://olx.pl/1", "title": "Test1"}], "totalPages": 2, "currentPage": 1}}}
+    escaped_str = json.dumps(state_dict).replace("/", "\\/").replace('"', '\\"')
+    mock_response_p1.text = f'''
+    <html><body><script>window.__PRERENDERED_STATE__="{escaped_str}";</script></body></html>
     '''
     
     mock_response_p2 = MagicMock(spec=httpx.Response)

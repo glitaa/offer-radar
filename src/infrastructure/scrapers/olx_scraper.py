@@ -11,7 +11,7 @@ from src.infrastructure.scrapers.base import (
     ScraperBlockedError
 )
 from src.infrastructure.scrapers.olx_parser import (
-    extract_next_data,
+    extract_prerendered_state,
     parse_listings_from_json,
     parse_listings_from_html,
     extract_pagination_info
@@ -49,18 +49,18 @@ class OlxScraper(ScraperPort):
                 html = response.text
                 
                 # 2. Parse first page
-                next_data = extract_next_data(html)
-                if next_data:
-                    listings = parse_listings_from_json(next_data)
+                state = extract_prerendered_state(html)
+                if state:
+                    listings = parse_listings_from_json(state)
                 else:
                     # Fallback to HTML if JSON isn't available
-                    logger.warning(f"__NEXT_DATA__ not found on {url}, falling back to HTML parser")
+                    logger.warning(f"__PRERENDERED_STATE__ not found on {url}, falling back to HTML parser")
                     listings = parse_listings_from_html(html)
                     
                 all_listings.extend(listings)
                 
                 # 3. Handle Pagination
-                pagination = extract_pagination_info(next_data)
+                pagination = extract_pagination_info(state)
                 current_page = pagination.get("current_page", 1)
                 total_pages = pagination.get("total_pages", 1)
                 
@@ -86,10 +86,10 @@ class OlxScraper(ScraperPort):
                     try:
                         logger.info(f"Fetching page {current_page}...")
                         page_response = await fetch_with_retry(client, next_url)
-                        page_next_data = extract_next_data(page_response.text)
+                        page_state = extract_prerendered_state(page_response.text)
                         
-                        if page_next_data:
-                            page_listings = parse_listings_from_json(page_next_data)
+                        if page_state:
+                            page_listings = parse_listings_from_json(page_state)
                         else:
                             page_listings = parse_listings_from_html(page_response.text)
                             
