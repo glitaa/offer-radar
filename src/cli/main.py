@@ -39,7 +39,14 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
             console.print(Panel(content, title=f"[bold green]{listing.title}[/bold green]", expand=False))
 
             while True:
-                key = msvcrt.getch().decode('utf-8').lower()
+                key_bytes = msvcrt.getch()
+                if key_bytes in (b'\x00', b'\xe0'):
+                    msvcrt.getch()
+                    continue
+                try:
+                    key = key_bytes.decode('utf-8').lower()
+                except UnicodeDecodeError:
+                    continue
                 if key == 's':
                     await session_manager.mark_listing(listing.id, ListingStatus.SAVED)
                     saved += 1
@@ -82,7 +89,14 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
 
         console.print("Check for new results? (y/n)")
         while True:
-            key = msvcrt.getch().decode('utf-8').lower()
+            key_bytes = msvcrt.getch()
+            if key_bytes in (b'\x00', b'\xe0'):
+                msvcrt.getch()
+                continue
+            try:
+                key = key_bytes.decode('utf-8').lower()
+            except UnicodeDecodeError:
+                continue
             if key == 'y':
                 await session_manager.sync_listings(session.id, session.search_url)
                 break
