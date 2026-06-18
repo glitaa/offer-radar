@@ -1,5 +1,6 @@
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column
 from sqlalchemy import String, Integer, ForeignKey
+from typing import Optional
 
 Base = declarative_base()
 
@@ -17,3 +18,7 @@ class ListingORM(Base):
     title: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String)
     session_id: Mapped[int] = mapped_column(Integer, ForeignKey("search_sessions.id"))
+    price: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    location: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    extra_data: Mapped[Optional[str]] = mapped_column(String, nullable=True)

@@ -39,7 +39,11 @@ async def test_search_session_and_listing_repositories(async_session):
     listing = Listing(
         url="https://olx.pl/offer-1",
         title="Test Job",
-        session_id=session_model.id
+        session_id=session_model.id,
+        price="1000 PLN",
+        location="Warszawa",
+        description="Test description",
+        extra_data={"contract": "B2B"}
     )
     await listing_repo.add(listing)
     assert listing.id is not None
@@ -48,6 +52,10 @@ async def test_search_session_and_listing_repositories(async_session):
     assert fetched_listing is not None
     assert fetched_listing.title == "Test Job"
     assert fetched_listing.status == ListingStatus.NEW
+    assert fetched_listing.price == "1000 PLN"
+    assert fetched_listing.location == "Warszawa"
+    assert fetched_listing.description == "Test description"
+    assert fetched_listing.extra_data == {"contract": "B2B"}
     
     unseen = await listing_repo.get_unseen_for_session(session_model.id)
     assert len(unseen) == 1
