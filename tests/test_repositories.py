@@ -64,3 +64,49 @@ async def test_search_session_and_listing_repositories(async_session):
     await listing_repo.update_status(listing.id, ListingStatus.SAVED.value)
     unseen_after = await listing_repo.get_unseen_for_session(session_model.id)
     assert len(unseen_after) == 0
+
+@pytest.mark.asyncio
+async def test_add_batch_ignores_duplicates(async_session):
+    listing_repo = SQLiteListingRepository(async_session)
+    session_repo = SQLiteSearchSessionRepository(async_session)
+    
+    session_model = SearchSession(search_url="https://olx.pl/praca/")
+    await session_repo.add(session_model)
+    
+    listing1 = Listing(
+        url="https://olx.pl/offer-dup",
+        title="Dup Job",
+        session_id=session_model.id,
+        price="1",
+        location="WWA",
+        description="test"
+    )
+    await listing_repo.add(listing1)
+    
+    listing_dup = Listing(
+        url="https://olx.pl/offer-dup",
+        title="Dup Job 2",
+        session_id=session_model.id,
+        price="2",
+        location="WWA",
+        description="test2"
+    )
+    
+    listing_new = Listing(
+        url="https://olx.pl/offer-new",
+        title="New Job",
+        session_id=session_model.id,
+        price="100",
+        location="WWA",
+        description="new test"
+    )
+    
+    await listing_repo.add_batch([listing_dup, listing_new])
+    
+    from sqlalchemy import select, func
+    from src.infrastructure.database.orm_models import ListingORM
+    stmt = select(func.count()).select_from(ListingORM)
+    result = await async_session.execute(stmt)
+    count = result.scalar()
+    
+    assert count == 2

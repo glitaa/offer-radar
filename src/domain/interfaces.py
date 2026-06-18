@@ -6,6 +6,10 @@ class ListingRepository(ABC):
     @abstractmethod
     async def add(self, listing: Listing) -> None:
         pass
+
+    @abstractmethod
+    async def add_batch(self, listings: List[Listing]) -> None:
+        pass
         
     @abstractmethod
     async def get_by_url(self, url: str) -> Optional[Listing]:

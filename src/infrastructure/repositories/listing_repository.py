@@ -27,25 +27,27 @@ class SQLiteListingRepository(ListingRepository):
         listing.id = orm_model.id
 
     async def add_batch(self, listings: List[Listing]) -> None:
-        orm_models = []
+        from sqlalchemy.dialects.sqlite import insert
+        if not listings:
+            return
+            
+        values = []
         for listing in listings:
             extra_data_json = json.dumps(listing.extra_data) if listing.extra_data else None
-            orm_model = ListingORM(
-                url=listing.url,
-                title=listing.title,
-                status=listing.status.value,
-                session_id=listing.session_id,
-                price=listing.price,
-                location=listing.location,
-                description=listing.description,
-                extra_data=extra_data_json
-            )
-            orm_models.append((listing, orm_model))
-            self.session.add(orm_model)
+            values.append({
+                'url': listing.url,
+                'title': listing.title,
+                'status': listing.status.value,
+                'session_id': listing.session_id,
+                'price': listing.price,
+                'location': listing.location,
+                'description': listing.description,
+                'extra_data': extra_data_json
+            })
             
+        stmt = insert(ListingORM).values(values).on_conflict_do_nothing(index_elements=['url'])
+        await self.session.execute(stmt)
         await self.session.commit()
-        for listing, orm_model in orm_models:
-            listing.id = orm_model.id
         
     async def get_by_url(self, url: str) -> Optional[Listing]:
         stmt = select(ListingORM).where(ListingORM.url == url)
