@@ -1,5 +1,5 @@
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, ForeignKey
+from sqlalchemy import String, Integer, ForeignKey, Float
 from typing import Optional, List
 
 Base = declarative_base()
@@ -18,7 +18,11 @@ class OfferORM(Base):
     title: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String)
     session_id: Mapped[int] = mapped_column(Integer, ForeignKey("search_sessions.id"))
-    price: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    price_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    price_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    currency: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    period: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    special_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     location: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     extra_data: Mapped[Optional[str]] = mapped_column(String, nullable=True)
@@ -31,6 +35,6 @@ class OfferUrlORM(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     offer_id: Mapped[int] = mapped_column(ForeignKey("offers.id"))
     url: Mapped[str] = mapped_column(String, unique=True, index=True)
-    source: Mapped[str] = mapped_column(String)
+
     
     offer: Mapped["OfferORM"] = relationship(back_populates="urls")
