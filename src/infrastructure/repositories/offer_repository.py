@@ -1,5 +1,5 @@
 from src.domain.interfaces import OfferRepository
-from src.domain.models import Offer, OfferStatus, OfferUrl, OfferPrice
+from src.domain.models import Offer, OfferStatus, OfferUrl, OfferPrice, OfferCategory
 from src.infrastructure.database.orm_models import OfferORM, OfferUrlORM
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -24,6 +24,10 @@ class SQLiteOfferRepository(OfferRepository):
         currency = offer.price.currency if offer.price else None
         period = offer.price.period if offer.price else None
         special_status = offer.price.special_status if offer.price else None
+        is_free = offer.price.is_free if offer.price else False
+        is_negotiable = offer.price.is_negotiable if offer.price else False
+
+        category_str = offer.category.value if offer.category else None
 
         orm_model = OfferORM(
             fingerprint=offer.fingerprint,
@@ -35,6 +39,9 @@ class SQLiteOfferRepository(OfferRepository):
             currency=currency,
             period=period,
             special_status=special_status,
+            is_free=is_free,
+            is_negotiable=is_negotiable,
+            category=category_str,
             location=offer.location,
             description=offer.description,
             extra_data=extra_data_json,
@@ -111,7 +118,9 @@ class SQLiteOfferRepository(OfferRepository):
             orm_model.price_max is not None, 
             orm_model.currency is not None, 
             orm_model.period is not None, 
-            orm_model.special_status is not None
+            orm_model.special_status is not None,
+            orm_model.is_free,
+            orm_model.is_negotiable
         ])
         
         offer_price = None
@@ -121,8 +130,12 @@ class SQLiteOfferRepository(OfferRepository):
                 price_max=orm_model.price_max,
                 currency=orm_model.currency,
                 period=orm_model.period,
-                special_status=orm_model.special_status
+                special_status=orm_model.special_status,
+                is_free=orm_model.is_free,
+                is_negotiable=orm_model.is_negotiable
             )
+            
+        offer_category = OfferCategory(orm_model.category) if orm_model.category else None
             
         return Offer(
             id=orm_model.id,
@@ -134,7 +147,8 @@ class SQLiteOfferRepository(OfferRepository):
             location=orm_model.location,
             description=orm_model.description,
             extra_data=extra_data,
-            urls=[OfferUrl(url=u.url) for u in orm_model.urls]
+            urls=[OfferUrl(url=u.url) for u in orm_model.urls],
+            category=offer_category
         )
 
     async def get_by_fingerprint(self, fingerprint: str) -> Optional[Offer]:

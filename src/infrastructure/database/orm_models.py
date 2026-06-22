@@ -1,5 +1,5 @@
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, ForeignKey, Float
+from sqlalchemy import String, Integer, ForeignKey, Float, Boolean
 from typing import Optional, List
 
 Base = declarative_base()
@@ -23,6 +23,9 @@ class OfferORM(Base):
     currency: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     period: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     special_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    is_free: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_negotiable: Mapped[bool] = mapped_column(Boolean, default=False)
+    category: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     location: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     extra_data: Mapped[Optional[str]] = mapped_column(String, nullable=True)
