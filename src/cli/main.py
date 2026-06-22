@@ -7,18 +7,18 @@ from rich.panel import Panel
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from src.infrastructure.database.orm_models import Base
 from src.infrastructure.repositories.search_session_repository import SQLiteSearchSessionRepository
-from src.infrastructure.repositories.listing_repository import SQLiteListingRepository
+from src.infrastructure.repositories.offer_repository import SQLiteOfferRepository
 from src.application.scraper_factory import ScraperFactory
 from src.application.session_manager import SessionManager
-from src.domain.models import SearchSession, ListingStatus
+from src.domain.models import SearchSession, OfferStatus
 
 console = Console()
 
 async def run_loop(session_manager: SessionManager, session: SearchSession):
     while True:
-        unseen_listings = await session_manager.get_unseen_listings(session.id)
-        if not unseen_listings:
-            console.print("[bold yellow]No new listings found.[/bold yellow]")
+        unseen_offers = await session_manager.get_unseen_offers(session.id)
+        if not unseen_offers:
+            console.print("[bold yellow]No new offers found.[/bold yellow]")
             break
 
         saved = 0
@@ -26,17 +26,18 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
         skipped = 0
         quit_requested = False
 
-        for listing in unseen_listings:
-            snippet = listing.description[:100] + "..." if listing.description and len(listing.description) > 100 else (listing.description or "")
+        for offer in unseen_offers:
+            snippet = offer.description[:100] + "..." if offer.description and len(offer.description) > 100 else (offer.description or "")
+            first_url = offer.urls[0].url if offer.urls else "N/A"
             content = (
-                f"[bold]Price:[/bold] {listing.price or 'N/A'}\n"
-                f"[bold]Location:[/bold] {listing.location or 'N/A'}\n"
-                f"[bold]URL:[/bold] {listing.url}\n\n"
+                f"[bold]Price:[/bold] {offer.price or 'N/A'}\n"
+                f"[bold]Location:[/bold] {offer.location or 'N/A'}\n"
+                f"[bold]URL:[/bold] {first_url}\n\n"
                 f"{snippet}\n\n"
                 f"[cyan](s) Save  (r) Reject  (k) Skip  (q) Quit[/cyan]"
             )
             
-            console.print(Panel(content, title=f"[bold green]{listing.title}[/bold green]", expand=False))
+            console.print(Panel(content, title=f"[bold green]{offer.title}[/bold green]", expand=False))
 
             while True:
                 key_bytes = msvcrt.getch()
@@ -48,31 +49,15 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
                 except UnicodeDecodeError:
                     continue
                 if key == 's':
-                    await session_manager.mark_listing(listing.id, ListingStatus.SAVED)
+                    await session_manager.mark_offer(offer.id, OfferStatus.SAVED)
                     saved += 1
                     break
                 elif key == 'r':
-                    await session_manager.mark_listing(listing.id, ListingStatus.REJECTED)
+                    await session_manager.mark_offer(offer.id, OfferStatus.REJECTED)
                     rejected += 1
                     break
                 elif key == 'k':
                     # Skipped stays as NEW so we see it next time, but we break here to advance.
-                    # Or we mark it as SKIPPED? Requirements: "(Skip means show again next time)"
-                    # Wait, requirement says "Skip means show again next time". If we mark it SKIPPED, 
-                    # we need to make sure get_unseen_listings doesn't fetch it? No, if we want to show it again,
-                    # we probably shouldn't change the state.
-                    # Wait, the prompt says: "Call `await session_manager.mark_listing(listing.id, ListingStatus.<STATUS>)` accordingly"
-                    # But if we change it to SKIPPED, get_unseen fetches NEW.
-                    # Let's read PROJECT.md: "(Skip means show again next time)"
-                    # Okay, maybe we shouldn't change it to skipped or change it to SKIPPED and get_unseen fetches NEW and SKIPPED?
-                    # The prompt says: "Call `await session_manager.mark_listing(listing.id, ListingStatus.<STATUS>)` accordingly"
-                    # If I use `ListingStatus.SKIPPED`, get_unseen_for_session only fetches `ListingStatus.NEW.value`.
-                    # So if I mark it SKIPPED, it will NOT be shown next time. 
-                    # Let's skip marking, or mark it as NEW, or wait, maybe skip doesn't call mark_listing.
-                    # I'll just skip and not call mark_listing to keep it NEW, but wait, the prompt says:
-                    # "Call `await session_manager.mark_listing(listing.id, ListingStatus.<STATUS>)` accordingly"
-                    # I will call mark_listing with ListingStatus.NEW for skip, or simply just `break`.
-                    # I'll just `break` to advance. But let's check: I'll increment skipped and break.
                     skipped += 1
                     break
                 elif key == 'q':
@@ -98,7 +83,7 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
             except UnicodeDecodeError:
                 continue
             if key == 'y':
-                await session_manager.sync_listings(session.id, session.search_url)
+                await session_manager.sync_offers(session.id, session.search_url)
                 break
             elif key == 'n':
                 return
@@ -119,18 +104,18 @@ async def main_async():
     
     async with async_session() as session:
         session_repo = SQLiteSearchSessionRepository(session)
-        listing_repo = SQLiteListingRepository(session)
+        offer_repo = SQLiteOfferRepository(session)
         scraper_factory = ScraperFactory.create_default()
         
-        manager = SessionManager(session_repo, listing_repo, scraper_factory)
+        manager = SessionManager(session_repo, offer_repo, scraper_factory)
         
         search_param = args.url if args.url else args.query
         console.print(f"[cyan]Starting session for: {search_param}[/cyan]")
         
         search_session = await manager.start_session(search_param)
         
-        console.print("[cyan]Syncing listings...[/cyan]")
-        await manager.sync_listings(search_session.id, search_session.search_url)
+        console.print("[cyan]Syncing offers...[/cyan]")
+        await manager.sync_offers(search_session.id, search_session.search_url)
         
         await run_loop(manager, search_session)
         
