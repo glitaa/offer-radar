@@ -1,6 +1,6 @@
 import pytest
 import json
-from src.domain.models import Offer, OfferStatus
+from src.domain.models import Offer, OfferStatus, OfferCategory
 from src.infrastructure.scrapers.olx_parser import (
     extract_prerendered_state,
     parse_offers_from_json,
@@ -67,7 +67,6 @@ def test_extract_prerendered_state_no_script():
     data = extract_prerendered_state("<html><body></body></html>")
     assert data == {}
 
-@pytest.mark.xfail(reason="Waiting for Phase 4")
 def test_parse_offers_from_json(sample_state):
     offers = parse_offers_from_json(sample_state)
     
@@ -76,7 +75,12 @@ def test_parse_offers_from_json(sample_state):
     job = offers[0]
     assert job.urls[0].url == "/oferta/1"
     assert job.title == "Full Listing Jobs"
-    assert job.price == "5000 - 6000 PLN / monthly"
+    assert job.category == OfferCategory.JOB
+    assert job.price is not None
+    assert job.price.price_min == 5000
+    assert job.price.price_max == 6000
+    assert job.price.currency == "PLN"
+    assert job.price.period == "monthly"
     assert job.location == "Warszawa, Mazowieckie"
     assert job.description == "A full description"
     assert job.extra_data["extra"] == "some extra data"
@@ -85,12 +89,15 @@ def test_parse_offers_from_json(sample_state):
     re_listing = offers[1]
     assert re_listing.urls[0].url == "https://olx.pl/offer/2"
     assert re_listing.title == "Full Listing RE"
-    assert re_listing.price == "1000 PLN"
+    assert re_listing.category == OfferCategory.REAL_ESTATE
+    assert re_listing.price is not None
+    assert re_listing.price.price_min == 1000
     assert re_listing.location == "Kraków"
     
     partial = offers[2]
     assert partial.urls[0].url == "/oferta/3"
     assert partial.title == "Partial Listing"
+    assert partial.category is None
     assert partial.price is None
     assert partial.location is None
 
@@ -106,7 +113,6 @@ def test_extract_pagination_info_default():
     assert info["total_pages"] == 1
     assert info["has_next"] is False
 
-@pytest.mark.xfail(reason="Waiting for Phase 4")
 def test_parse_offers_from_html():
     html = '''
     <div class="jobs-ad-card">

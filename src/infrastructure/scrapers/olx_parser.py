@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from bs4 import BeautifulSoup
-from src.domain.models import Offer, OfferStatus, OfferUrl
+from src.domain.models import Offer, OfferStatus, OfferUrl, OfferPrice, OfferCategory
 
 logger = logging.getLogger(__name__)
 
@@ -37,24 +37,78 @@ def parse_offers_from_json(state: dict) -> list[Offer]:
                 if not url or not title:
                     continue # Minimum required fields
                     
-                # Handle price (Real Estate) or salary (Jobs)
-                price = None
+                # Handle category (Real Estate or Jobs)
+                category = None
                 salary = ad.get("salary")
-                if isinstance(salary, dict):
-                    sal_from = salary.get("from", "")
-                    sal_to = salary.get("to", "")
-                    curr = salary.get("currencyCode", "PLN")
-                    period = salary.get("period", "")
-                    if sal_from and sal_to:
-                        price = f"{sal_from} - {sal_to} {curr} / {period}".strip()
-                    elif sal_from:
-                        price = f"{sal_from} {curr} / {period}".strip()
-                else:
-                    price_obj = ad.get("price", {})
+                price_obj = ad.get("price", {})
+                is_real_estate = "/nieruchomosci/" in url
+                
+                if salary:
+                    category = OfferCategory.JOB
+                elif is_real_estate or (price_obj and not salary):
+                    category = OfferCategory.REAL_ESTATE
+
+                # Handle price flags and numeric values
+                price = None
+                price_min = None
+                price_max = None
+                currency = None
+                period = None
+                is_free = False
+                is_negotiable = False
+
+                if isinstance(price_obj, dict):
+                    display_value = str(price_obj.get("displayValue") or price_obj.get("value") or "").lower()
+                    if "za darmo" in display_value:
+                        is_free = True
+                    if "do negocjacji" in display_value or price_obj.get("isNegotiable") is True:
+                        is_negotiable = True
+                elif isinstance(price_obj, str):
+                    display_value = price_obj.lower()
+                    if "za darmo" in display_value:
+                        is_free = True
+                    if "do negocjacji" in display_value:
+                        is_negotiable = True
+
+                if category == OfferCategory.JOB and isinstance(salary, dict):
+                    sal_from = salary.get("from")
+                    sal_to = salary.get("to")
+                    currency = salary.get("currencyCode", "PLN")
+                    period = salary.get("type") or salary.get("period")
+                    
+                    try:
+                        price_min = float(sal_from) if sal_from is not None else None
+                    except ValueError: pass
+                    try:
+                        price_max = float(sal_to) if sal_to is not None else None
+                    except ValueError: pass
+                elif category == OfferCategory.REAL_ESTATE:
                     if isinstance(price_obj, dict):
-                        price = price_obj.get("displayValue") or price_obj.get("value")
-                    elif isinstance(price_obj, str):
-                        price = price_obj
+                        reg_price = price_obj.get("regularPrice", {})
+                        if isinstance(reg_price, dict):
+                            val = reg_price.get("value")
+                            currency = reg_price.get("currencyCode", "PLN")
+                            if val is not None:
+                                try:
+                                    price_min = float(val)
+                                except ValueError: pass
+                        
+                        if price_min is None and not is_free and price_obj.get("displayValue"):
+                            num_str = re.sub(r'[^\d\.\,]', '', price_obj.get("displayValue").replace(',', '.'))
+                            if num_str:
+                                try:
+                                    price_min = float(num_str)
+                                except ValueError: pass
+                                
+                if price_min is not None or price_max is not None or is_free or is_negotiable:
+                    price = OfferPrice(
+                        price_min=price_min,
+                        price_max=price_max,
+                        currency=currency,
+                        period=period,
+                        is_free=is_free,
+                        is_negotiable=is_negotiable
+                    )
 
                 # Handle location
                 location_obj = ad.get("location")
@@ -71,11 +125,12 @@ def parse_offers_from_json(state: dict) -> list[Offer]:
                     title=title,
                     fingerprint=url,
                     status=OfferStatus.NEW,
-                    price=str(price) if price else None,
+                    price=price,
+                    category=category,
                     location=location,
                     description=description,
                     extra_data=extra_data,
-                    urls=[OfferUrl(url=url, source="olx")]
+                    urls=[OfferUrl(url=url)]
                 )
                 offers.append(offer)
             except Exception as e:
@@ -113,7 +168,9 @@ def parse_offers_from_html(html: str) -> list[Offer]:
                     title=title,
                     fingerprint=url,
                     status=OfferStatus.NEW,
-                    urls=[OfferUrl(url=url, source="olx")]
+                    price=None,
+                    category=None,
+                    urls=[OfferUrl(url=url)]
                 )
                 offers.append(offer)
             except Exception as e:
