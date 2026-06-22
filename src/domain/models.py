@@ -10,6 +10,10 @@ class OfferStatus(str, Enum):
     REJECTED = "Rejected"
     SKIPPED = "Skipped"
 
+class OfferCategory(str, Enum):
+    JOB = "JOB"
+    REAL_ESTATE = "REAL_ESTATE"
+
 @dataclass
 class OfferPrice:
     price_min: Optional[float] = None
@@ -17,6 +21,8 @@ class OfferPrice:
     currency: Optional[str] = None
     period: Optional[str] = None
     special_status: Optional[str] = None
+    is_free: bool = False
+    is_negotiable: bool = False
 
 @dataclass
 class OfferUrl:
@@ -34,6 +40,7 @@ class Offer:
     extra_data: Optional[Dict[str, Any]] = None
     urls: List[OfferUrl] = field(default_factory=list)
     fingerprint: str = ""
+    category: Optional[OfferCategory] = None
 
     def __post_init__(self):
         if self.fingerprint == "":
@@ -47,12 +54,15 @@ class Offer:
                 str(self.price.price_max) if self.price.price_max is not None else "",
                 str(self.price.currency) if self.price.currency is not None else "",
                 str(self.price.period) if self.price.period is not None else "",
-                str(self.price.special_status) if self.price.special_status is not None else ""
+                str(self.price.special_status) if self.price.special_status is not None else "",
+                str(self.price.is_free),
+                str(self.price.is_negotiable)
             ]
             price_str = " ".join(p_parts)
             
         desc_str = self.description if self.description is not None else ""
-        raw = f"{self.title} {desc_str} {price_str}"
+        cat_str = self.category.value if self.category is not None else ""
+        raw = f"{self.title} {desc_str} {price_str} {cat_str}"
         
         # Normalize: lowercase
         norm = raw.lower()
