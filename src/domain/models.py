@@ -1,24 +1,30 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
-class ListingStatus(str, Enum):
+class OfferStatus(str, Enum):
     NEW = "New"
     SAVED = "Saved"
     REJECTED = "Rejected"
     SKIPPED = "Skipped"
 
 @dataclass
-class Listing:
+class OfferUrl:
     url: str
+    source: str = "olx"
+
+@dataclass
+class Offer:
     title: str
-    status: ListingStatus = ListingStatus.NEW
+    fingerprint: str
+    status: OfferStatus = OfferStatus.NEW
     id: Optional[int] = None
     session_id: Optional[int] = None
     price: Optional[str] = None
     location: Optional[str] = None
     description: Optional[str] = None
     extra_data: Optional[Dict[str, Any]] = None
+    urls: List[OfferUrl] = field(default_factory=list)
 
 @dataclass
 class SearchSession:
