@@ -10,7 +10,8 @@ from src.infrastructure.repositories.search_session_repository import SQLiteSear
 from src.infrastructure.repositories.offer_repository import SQLiteOfferRepository
 from src.application.scraper_factory import ScraperFactory
 from src.application.session_manager import SessionManager
-from src.domain.models import SearchSession, OfferStatus
+from src.application.session_manager import SessionManager
+from src.domain.models import SearchSession, OfferStatus, OfferCategory
 
 console = Console()
 
@@ -28,9 +29,33 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
 
         for offer in unseen_offers:
             snippet = offer.description[:100] + "..." if offer.description and len(offer.description) > 100 else (offer.description or "")
+            
             first_url = offer.urls[0].url if offer.urls else "N/A"
+            if offer.urls and len(offer.urls) > 1:
+                first_url += f" (+ {len(offer.urls) - 1} other links)"
+
+            price_label = "Salary" if offer.category == OfferCategory.JOB else "Price"
+            
+            price_display = "Unknown"
+            if offer.price:
+                if offer.price.is_free:
+                    price_display = "Free"
+                else:
+                    min_p = offer.price.price_min
+                    max_p = offer.price.price_max
+                    curr = offer.price.currency or ""
+                    period = f"/{offer.price.period}" if offer.price.period else ""
+                    
+                    if min_p is not None and max_p is not None:
+                        price_display = f"{min_p} - {max_p} {curr}{period}".strip()
+                    elif min_p is not None:
+                        price_display = f"{min_p} {curr}{period}".strip()
+                
+                if offer.price.is_negotiable:
+                    price_display += " (Negotiable)"
+
             content = (
-                f"[bold]Price:[/bold] {offer.price or 'N/A'}\n"
+                f"[bold]{price_label}:[/bold] {price_display}\n"
                 f"[bold]Location:[/bold] {offer.location or 'N/A'}\n"
                 f"[bold]URL:[/bold] {first_url}\n\n"
                 f"{snippet}\n\n"

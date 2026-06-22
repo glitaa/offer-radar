@@ -2,18 +2,17 @@ import pytest
 import pytest_asyncio
 from unittest.mock import patch, AsyncMock, MagicMock
 from src.cli.main import run_loop
-from src.domain.models import SearchSession, Offer, OfferStatus
+from src.domain.models import SearchSession, Offer, OfferStatus, OfferPrice, OfferCategory
 
-@pytest.mark.xfail(reason="Waiting for Phase 4")
 @pytest.mark.asyncio
 async def test_cli_loop_actions():
     session_manager = AsyncMock()
     session = SearchSession(search_url="https://test.com", id=1)
     
-    offer1 = Offer(title="title1", id=10, description="desc1", price="100", location="loc1", fingerprint="fp1", urls=[])
-    offer2 = Offer(title="title2", id=20, description="desc2", price="200", location="loc2", fingerprint="fp2", urls=[])
-    offer3 = Offer(title="title3", id=30, description="desc3", price="300", location="loc3", fingerprint="fp3", urls=[])
-    offer4 = Offer(title="title4", id=40, description="desc4", price="400", location="loc4", fingerprint="fp4", urls=[])
+    offer1 = Offer(title="title1", id=10, description="desc1", price=OfferPrice(price_min=100), location="loc1", fingerprint="fp1", urls=[], category=OfferCategory.JOB)
+    offer2 = Offer(title="title2", id=20, description="desc2", price=OfferPrice(price_min=200), location="loc2", fingerprint="fp2", urls=[], category=OfferCategory.REAL_ESTATE)
+    offer3 = Offer(title="title3", id=30, description="desc3", price=OfferPrice(price_min=300), location="loc3", fingerprint="fp3", urls=[], category=OfferCategory.JOB)
+    offer4 = Offer(title="title4", id=40, description="desc4", price=OfferPrice(price_min=400), location="loc4", fingerprint="fp4", urls=[], category=OfferCategory.REAL_ESTATE)
     
     session_manager.get_unseen_offers.return_value = [offer1, offer2, offer3, offer4]
     
