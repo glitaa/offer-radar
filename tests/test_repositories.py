@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from src.infrastructure.database.orm_models import Base
-from src.domain.models import Offer, SearchSession, OfferStatus, OfferUrl
+from src.domain.models import Offer, SearchSession, OfferStatus, OfferUrl, OfferPrice
 from src.infrastructure.repositories.offer_repository import SQLiteOfferRepository
 from src.infrastructure.repositories.search_session_repository import SQLiteSearchSessionRepository
 
@@ -23,7 +23,6 @@ async def async_session():
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
 
-@pytest.mark.xfail(reason="Waiting for Phase 3")
 @pytest.mark.asyncio
 async def test_search_session_and_offer_repositories(async_session):
     session_repo = SQLiteSearchSessionRepository(async_session)
@@ -39,10 +38,10 @@ async def test_search_session_and_offer_repositories(async_session):
     
     offer = Offer(
         fingerprint="https://olx.pl/offer-1",
-        urls=[OfferUrl(url="https://olx.pl/offer-1", source="olx")],
+        urls=[OfferUrl(url="https://olx.pl/offer-1")],
         title="Test Job",
         session_id=session_model.id,
-        price="1000 PLN",
+        price=OfferPrice(price_min=1000.0, currency="PLN"),
         location="Warszawa",
         description="Test description",
         extra_data={"contract": "B2B"}
@@ -54,7 +53,7 @@ async def test_search_session_and_offer_repositories(async_session):
     assert fetched_offer is not None
     assert fetched_offer.title == "Test Job"
     assert fetched_offer.status == OfferStatus.NEW
-    assert fetched_offer.price == "1000 PLN"
+    assert fetched_offer.price == OfferPrice(price_min=1000.0, currency="PLN")
     assert fetched_offer.location == "Warszawa"
     assert fetched_offer.description == "Test description"
     assert fetched_offer.extra_data == {"contract": "B2B"}
@@ -67,7 +66,6 @@ async def test_search_session_and_offer_repositories(async_session):
     unseen_after = await offer_repo.get_unseen_for_session(session_model.id)
     assert len(unseen_after) == 0
 
-@pytest.mark.xfail(reason="Waiting for Phase 3")
 @pytest.mark.asyncio
 async def test_add_batch_ignores_duplicates(async_session):
     offer_repo = SQLiteOfferRepository(async_session)
@@ -78,10 +76,10 @@ async def test_add_batch_ignores_duplicates(async_session):
     
     offer1 = Offer(
         fingerprint="https://olx.pl/offer-dup",
-        urls=[OfferUrl(url="https://olx.pl/offer-dup", source="olx")],
+        urls=[OfferUrl(url="https://olx.pl/offer-dup")],
         title="Dup Job",
         session_id=session_model.id,
-        price="1",
+        price=OfferPrice(price_min=1.0),
         location="WWA",
         description="test"
     )
@@ -89,20 +87,20 @@ async def test_add_batch_ignores_duplicates(async_session):
     
     offer_dup = Offer(
         fingerprint="https://olx.pl/offer-dup",
-        urls=[OfferUrl(url="https://olx.pl/offer-dup", source="olx")],
+        urls=[OfferUrl(url="https://olx.pl/offer-dup")],
         title="Dup Job 2",
         session_id=session_model.id,
-        price="2",
+        price=OfferPrice(price_min=2.0),
         location="WWA",
         description="test2"
     )
     
     offer_new = Offer(
         fingerprint="https://olx.pl/offer-new",
-        urls=[OfferUrl(url="https://olx.pl/offer-new", source="olx")],
+        urls=[OfferUrl(url="https://olx.pl/offer-new")],
         title="New Job",
         session_id=session_model.id,
-        price="100",
+        price=OfferPrice(price_min=100.0),
         location="WWA",
         description="new test"
     )
@@ -116,3 +114,82 @@ async def test_add_batch_ignores_duplicates(async_session):
     count = result.scalar()
     
     assert count == 2
+
+@pytest.mark.asyncio
+async def test_add_batch_conflict_resolution_and_new_url(async_session):
+    offer_repo = SQLiteOfferRepository(async_session)
+    session_repo = SQLiteSearchSessionRepository(async_session)
+    
+    session_model = SearchSession(search_url="https://olx.pl/praca/")
+    await session_repo.add(session_model)
+    
+    # 1. Setup an existing offer
+    offer_existing = Offer(
+        fingerprint="fp-old",
+        urls=[OfferUrl(url="https://olx.pl/offer-url-1")],
+        title="Old Job",
+        session_id=session_model.id,
+        price=OfferPrice(price_min=100.0),
+        location="WWA",
+        description="old desc"
+    )
+    await offer_repo.add(offer_existing)
+    
+    # 2. Add an offer with the same URL but different fingerprint (D-01 conflict)
+    offer_conflict = Offer(
+        fingerprint="fp-new",
+        urls=[OfferUrl(url="https://olx.pl/offer-url-1")],
+        title="Conflict Job",
+        session_id=session_model.id,
+        price=OfferPrice(price_min=150.0),
+        location="WWA",
+        description="new desc"
+    )
+    
+    # Let's run add_batch with the conflict offer
+    await offer_repo.add_batch([offer_conflict])
+    
+    async_session.expire_all()
+    
+    # Assert old offer (fp-old) is deleted and new offer (fp-new) is present
+    fetched_old = await offer_repo.get_by_fingerprint("fp-old")
+    assert fetched_old is None
+    
+    fetched_new = await offer_repo.get_by_fingerprint("fp-new")
+    assert fetched_new is not None
+    assert fetched_new.title == "Conflict Job"
+    assert len(fetched_new.urls) == 1
+    assert fetched_new.urls[0].url == "https://olx.pl/offer-url-1"
+
+    # Now let's re-add fp-old as a starting point to test new url on same fingerprint
+    offer_base = Offer(
+        fingerprint="fp-base",
+        urls=[OfferUrl(url="https://olx.pl/url-base-1")],
+        title="Base Job",
+        session_id=session_model.id,
+        price=OfferPrice(price_min=200.0),
+        location="WWA",
+        description="base"
+    )
+    await offer_repo.add(offer_base)
+    
+    # Offer with new URL but same fingerprint "fp-base"
+    offer_same_fp_new_url = Offer(
+        fingerprint="fp-base",
+        urls=[OfferUrl(url="https://olx.pl/url-base-2")],
+        title="Base Job",
+        session_id=session_model.id,
+        price=OfferPrice(price_min=200.0),
+        location="WWA",
+        description="base"
+    )
+    await offer_repo.add_batch([offer_same_fp_new_url])
+    
+    async_session.expire_all()
+    
+    # Check that there is still only 1 offer for fp-base, but it now has both URLs
+    fetched_base = await offer_repo.get_by_fingerprint("fp-base")
+    assert fetched_base is not None
+    assert len(fetched_base.urls) == 2
+    urls = {u.url for u in fetched_base.urls}
+    assert urls == {"https://olx.pl/url-base-1", "https://olx.pl/url-base-2"}
