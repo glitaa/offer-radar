@@ -20,7 +20,7 @@ def test_olx_scraper_can_handle(scraper):
 @pytest.mark.asyncio
 @patch("src.infrastructure.scrapers.base.polite_delay", new_callable=AsyncMock)
 @patch("httpx.AsyncClient.get", new_callable=AsyncMock)
-async def test_fetch_listings_success(mock_get, mock_delay, scraper):
+async def test_fetch_offers_success(mock_get, mock_delay, scraper):
     # Mock first page
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
@@ -32,32 +32,32 @@ async def test_fetch_listings_success(mock_get, mock_delay, scraper):
     '''
     mock_get.return_value = mock_response
 
-    listings = await scraper.fetch_listings("https://www.olx.pl/praca/")
+    offers = await scraper.fetch_offers("https://www.olx.pl/praca/")
     
-    assert len(listings) == 1
-    assert listings[0].url == "http://olx.pl/1"
-    assert listings[0].title == "Test"
+    assert len(offers) == 1
+    assert offers[0].urls[0].url == "http://olx.pl/1"
+    assert offers[0].title == "Test"
     assert mock_get.call_count == 1
 
 @pytest.mark.asyncio
 @patch("src.infrastructure.scrapers.base.polite_delay", new_callable=AsyncMock)
 @patch("httpx.AsyncClient.get", new_callable=AsyncMock)
-async def test_fetch_listings_graceful_degradation_initial(mock_get, mock_delay, scraper):
+async def test_fetch_offers_graceful_degradation_initial(mock_get, mock_delay, scraper):
     # Mock initial 403
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 403
     mock_get.return_value = mock_response
 
     # Should return empty list, not raise
-    listings = await scraper.fetch_listings("https://www.olx.pl/praca/")
+    offers = await scraper.fetch_offers("https://www.olx.pl/praca/")
     
-    assert len(listings) == 0
+    assert len(offers) == 0
     assert mock_get.call_count == 1
 
 @pytest.mark.asyncio
 @patch("src.infrastructure.scrapers.base.polite_delay", new_callable=AsyncMock)
 @patch("httpx.AsyncClient.get", new_callable=AsyncMock)
-async def test_fetch_listings_graceful_degradation_pagination(mock_get, mock_delay, scraper):
+async def test_fetch_offers_graceful_degradation_pagination(mock_get, mock_delay, scraper):
     # Mock page 1 success, page 2 429 Blocked
     mock_response_p1 = MagicMock(spec=httpx.Response)
     mock_response_p1.status_code = 200
@@ -73,11 +73,11 @@ async def test_fetch_listings_graceful_degradation_pagination(mock_get, mock_del
     
     mock_get.side_effect = [mock_response_p1, mock_response_p2]
 
-    listings = await scraper.fetch_listings("https://www.olx.pl/praca/")
+    offers = await scraper.fetch_offers("https://www.olx.pl/praca/")
     
-    # Should return listings from page 1, stop at page 2, not raise
-    assert len(listings) == 1
-    assert listings[0].url == "http://olx.pl/1"
+    # Should return offers from page 1, stop at page 2, not raise
+    assert len(offers) == 1
+    assert offers[0].urls[0].url == "http://olx.pl/1"
     assert mock_get.call_count == 2
     
 @pytest.mark.asyncio
@@ -91,6 +91,6 @@ async def test_fetch_with_retry_network_error(mock_get, mock_sleep, scraper):
         MagicMock(status_code=200, text='{"props": {"pageProps": {"data": {"ads": [], "pagination": {"totalPages": 1}}}}}')
     ]
     
-    listings = await scraper.fetch_listings("https://www.olx.pl/praca/")
-    assert len(listings) == 0
+    offers = await scraper.fetch_offers("https://www.olx.pl/praca/")
+    assert len(offers) == 0
     assert mock_get.call_count == 3

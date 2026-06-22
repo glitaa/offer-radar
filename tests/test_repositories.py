@@ -2,8 +2,8 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from src.infrastructure.database.orm_models import Base
-from src.domain.models import Listing, SearchSession, ListingStatus
-from src.infrastructure.repositories.listing_repository import SQLiteListingRepository
+from src.domain.models import Offer, SearchSession, OfferStatus, OfferUrl
+from src.infrastructure.repositories.offer_repository import SQLiteOfferRepository
 from src.infrastructure.repositories.search_session_repository import SQLiteSearchSessionRepository
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -24,9 +24,9 @@ async def async_session():
     await engine.dispose()
 
 @pytest.mark.asyncio
-async def test_search_session_and_listing_repositories(async_session):
+async def test_search_session_and_offer_repositories(async_session):
     session_repo = SQLiteSearchSessionRepository(async_session)
-    listing_repo = SQLiteListingRepository(async_session)
+    offer_repo = SQLiteOfferRepository(async_session)
     
     session_model = SearchSession(search_url="https://olx.pl/praca/")
     await session_repo.add(session_model)
@@ -36,8 +36,9 @@ async def test_search_session_and_listing_repositories(async_session):
     assert fetched_session is not None
     assert fetched_session.id == session_model.id
     
-    listing = Listing(
-        url="https://olx.pl/offer-1",
+    offer = Offer(
+        fingerprint="https://olx.pl/offer-1",
+        urls=[OfferUrl(url="https://olx.pl/offer-1", source="olx")],
         title="Test Job",
         session_id=session_model.id,
         price="1000 PLN",
@@ -45,46 +46,48 @@ async def test_search_session_and_listing_repositories(async_session):
         description="Test description",
         extra_data={"contract": "B2B"}
     )
-    await listing_repo.add(listing)
-    assert listing.id is not None
+    await offer_repo.add(offer)
+    assert offer.id is not None
     
-    fetched_listing = await listing_repo.get_by_url("https://olx.pl/offer-1")
-    assert fetched_listing is not None
-    assert fetched_listing.title == "Test Job"
-    assert fetched_listing.status == ListingStatus.NEW
-    assert fetched_listing.price == "1000 PLN"
-    assert fetched_listing.location == "Warszawa"
-    assert fetched_listing.description == "Test description"
-    assert fetched_listing.extra_data == {"contract": "B2B"}
+    fetched_offer = await offer_repo.get_by_fingerprint("https://olx.pl/offer-1")
+    assert fetched_offer is not None
+    assert fetched_offer.title == "Test Job"
+    assert fetched_offer.status == OfferStatus.NEW
+    assert fetched_offer.price == "1000 PLN"
+    assert fetched_offer.location == "Warszawa"
+    assert fetched_offer.description == "Test description"
+    assert fetched_offer.extra_data == {"contract": "B2B"}
     
-    unseen = await listing_repo.get_unseen_for_session(session_model.id)
+    unseen = await offer_repo.get_unseen_for_session(session_model.id)
     assert len(unseen) == 1
-    assert unseen[0].id == listing.id
+    assert unseen[0].id == offer.id
     
-    await listing_repo.update_status(listing.id, ListingStatus.SAVED.value)
-    unseen_after = await listing_repo.get_unseen_for_session(session_model.id)
+    await offer_repo.update_status(offer.id, OfferStatus.SAVED.value)
+    unseen_after = await offer_repo.get_unseen_for_session(session_model.id)
     assert len(unseen_after) == 0
 
 @pytest.mark.asyncio
 async def test_add_batch_ignores_duplicates(async_session):
-    listing_repo = SQLiteListingRepository(async_session)
+    offer_repo = SQLiteOfferRepository(async_session)
     session_repo = SQLiteSearchSessionRepository(async_session)
     
     session_model = SearchSession(search_url="https://olx.pl/praca/")
     await session_repo.add(session_model)
     
-    listing1 = Listing(
-        url="https://olx.pl/offer-dup",
+    offer1 = Offer(
+        fingerprint="https://olx.pl/offer-dup",
+        urls=[OfferUrl(url="https://olx.pl/offer-dup", source="olx")],
         title="Dup Job",
         session_id=session_model.id,
         price="1",
         location="WWA",
         description="test"
     )
-    await listing_repo.add(listing1)
+    await offer_repo.add(offer1)
     
-    listing_dup = Listing(
-        url="https://olx.pl/offer-dup",
+    offer_dup = Offer(
+        fingerprint="https://olx.pl/offer-dup",
+        urls=[OfferUrl(url="https://olx.pl/offer-dup", source="olx")],
         title="Dup Job 2",
         session_id=session_model.id,
         price="2",
@@ -92,8 +95,9 @@ async def test_add_batch_ignores_duplicates(async_session):
         description="test2"
     )
     
-    listing_new = Listing(
-        url="https://olx.pl/offer-new",
+    offer_new = Offer(
+        fingerprint="https://olx.pl/offer-new",
+        urls=[OfferUrl(url="https://olx.pl/offer-new", source="olx")],
         title="New Job",
         session_id=session_model.id,
         price="100",
@@ -101,11 +105,11 @@ async def test_add_batch_ignores_duplicates(async_session):
         description="new test"
     )
     
-    await listing_repo.add_batch([listing_dup, listing_new])
+    await offer_repo.add_batch([offer_dup, offer_new])
     
     from sqlalchemy import select, func
-    from src.infrastructure.database.orm_models import ListingORM
-    stmt = select(func.count()).select_from(ListingORM)
+    from src.infrastructure.database.orm_models import OfferORM
+    stmt = select(func.count()).select_from(OfferORM)
     result = await async_session.execute(stmt)
     count = result.scalar()
     
