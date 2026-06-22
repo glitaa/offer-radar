@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from bs4 import BeautifulSoup
-from src.domain.models import Listing, ListingStatus
+from src.domain.models import Offer, OfferStatus, OfferUrl
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +23,9 @@ def extract_prerendered_state(html: str) -> dict:
         logger.warning(f"Error extracting __PRERENDERED_STATE__: {e}")
     return {}
 
-def parse_listings_from_json(state: dict) -> list[Listing]:
-    """Parses listings from the decoded __PRERENDERED_STATE__ dictionary."""
-    listings = []
+def parse_offers_from_json(state: dict) -> list[Offer]:
+    """Parses offers from the decoded __PRERENDERED_STATE__ dictionary."""
+    offers = []
     try:
         ads = state.get("listing", {}).get("listing", {}).get("ads", [])
         
@@ -67,27 +67,28 @@ def parse_listings_from_json(state: dict) -> list[Listing]:
                 # Use entire ad object as extra data minus standard fields
                 extra_data = {k: v for k, v in ad.items() if k not in ("url", "urlPath", "title", "price", "salary", "location", "description")}
                 
-                listing = Listing(
-                    url=url,
+                offer = Offer(
                     title=title,
-                    status=ListingStatus.NEW,
+                    fingerprint=url,
+                    status=OfferStatus.NEW,
                     price=str(price) if price else None,
                     location=location,
                     description=description,
-                    extra_data=extra_data
+                    extra_data=extra_data,
+                    urls=[OfferUrl(url=url, source="olx")]
                 )
-                listings.append(listing)
+                offers.append(offer)
             except Exception as e:
-                logger.warning(f"Error parsing individual listing from JSON: {e}")
+                logger.warning(f"Error parsing individual offer from JSON: {e}")
                 
     except Exception as e:
-        logger.warning(f"Error parsing listings from JSON: {e}")
+        logger.warning(f"Error parsing offers from JSON: {e}")
         
-    return listings
+    return offers
 
-def parse_listings_from_html(html: str) -> list[Listing]:
-    """Fallback method to parse listings directly from HTML."""
-    listings = []
+def parse_offers_from_html(html: str) -> list[Offer]:
+    """Fallback method to parse offers directly from HTML."""
+    offers = []
     try:
         soup = BeautifulSoup(html, "html.parser")
         # Try both the generic job cards and the old fallback selectors just in case
@@ -108,18 +109,19 @@ def parse_listings_from_html(html: str) -> list[Listing]:
                 title_elem = card.find('h6')
                 title = title_elem.text.strip() if title_elem else "Unknown Title"
                 
-                listing = Listing(
-                    url=url,
+                offer = Offer(
                     title=title,
-                    status=ListingStatus.NEW
+                    fingerprint=url,
+                    status=OfferStatus.NEW,
+                    urls=[OfferUrl(url=url, source="olx")]
                 )
-                listings.append(listing)
+                offers.append(offer)
             except Exception as e:
-                logger.warning(f"Error parsing individual listing from HTML: {e}")
+                logger.warning(f"Error parsing individual offer from HTML: {e}")
     except Exception as e:
-        logger.warning(f"Error parsing listings from HTML: {e}")
+        logger.warning(f"Error parsing offers from HTML: {e}")
         
-    return listings
+    return offers
 
 def extract_pagination_info(state: dict) -> dict:
     """Extracts pagination info from __PRERENDERED_STATE__."""
