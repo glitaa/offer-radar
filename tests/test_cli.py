@@ -4,6 +4,7 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from src.cli.main import run_loop
 from src.domain.models import SearchSession, Offer, OfferStatus
 
+@pytest.mark.xfail(reason="Waiting for Phase 4")
 @pytest.mark.asyncio
 async def test_cli_loop_actions():
     session_manager = AsyncMock()

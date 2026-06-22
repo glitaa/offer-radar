@@ -42,8 +42,8 @@ async def test_session_manager_sync_offers():
     scraper_factory.get_scraper.return_value = scraper
     
     mock_offers = [
-        Offer(fingerprint="test1", urls=[OfferUrl(url="test1", source="olx")], title="title1"),
-        Offer(fingerprint="test2", urls=[OfferUrl(url="test2", source="olx")], title="title2"),
+        Offer(fingerprint="test1", urls=[OfferUrl(url="test1")], title="title1"),
+        Offer(fingerprint="test2", urls=[OfferUrl(url="test2")], title="title2"),
     ]
     scraper.fetch_offers.return_value = mock_offers
     

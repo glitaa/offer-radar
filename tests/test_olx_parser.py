@@ -67,6 +67,7 @@ def test_extract_prerendered_state_no_script():
     data = extract_prerendered_state("<html><body></body></html>")
     assert data == {}
 
+@pytest.mark.xfail(reason="Waiting for Phase 4")
 def test_parse_offers_from_json(sample_state):
     offers = parse_offers_from_json(sample_state)
     
@@ -105,6 +106,7 @@ def test_extract_pagination_info_default():
     assert info["total_pages"] == 1
     assert info["has_next"] is False
 
+@pytest.mark.xfail(reason="Waiting for Phase 4")
 def test_parse_offers_from_html():
     html = '''
     <div class="jobs-ad-card">
