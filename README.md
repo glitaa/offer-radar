@@ -10,7 +10,7 @@ Currently supports: **OLX.pl** (Jobs and Real Estate)
 - **Session Management:** Save your progress and resume your search at any time.
 
 ## Prerequisites
-- Python 3.12+ installed on your system.
+- [uv](https://github.com/astral-sh/uv) installed on your system (Python is managed automatically by uv).
 
 ## Getting Started
 
@@ -28,7 +28,7 @@ Currently supports: **OLX.pl** (Jobs and Real Estate)
 ./offer-radar --query "laptop"
 ```
 
-*(On the first run, the script will automatically create a virtual environment and install all required dependencies before starting the application.)*
+*(On the first run, the script will automatically use `uv` to download the required Python version, create a virtual environment, and install all dependencies before starting the application.)*
 
 ## Usage
 

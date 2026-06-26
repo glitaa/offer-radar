@@ -1,0 +1,31 @@
+[project]
+name = "offer-radar"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiosqlite==0.22.1",
+    "anyio==4.14.0",
+    "beautifulsoup4==4.15.0",
+    "certifi==2026.6.17",
+    "colorama==0.4.6",
+    "greenlet==3.5.2",
+    "h11==0.16.0",
+    "httpcore==1.0.9",
+    "httpx==0.28.1",
+    "idna==3.18",
+    "iniconfig==2.3.0",
+    "lxml==6.1.1",
+    "markdown-it-py==4.2.0",
+    "mdurl==0.1.2",
+    "packaging==26.2",
+    "pluggy==1.6.0",
+    "pygments==2.20.0",
+    "pytest==9.1.0",
+    "pytest-asyncio==1.4.0",
+    "rich==15.0.0",
+    "soupsieve==2.8.4",
+    "sqlalchemy==2.0.51",
+    "typing-extensions==4.15.0",
+]
