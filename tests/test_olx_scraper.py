@@ -32,7 +32,9 @@ async def test_fetch_offers_success(mock_get, mock_delay, scraper):
     '''
     mock_get.return_value = mock_response
 
-    offers = await scraper.fetch_offers("https://www.olx.pl/praca/")
+    offers = []
+    async for prog, page_offers in scraper.fetch_offers("https://www.olx.pl/praca/"):
+        offers.extend(page_offers)
     
     assert len(offers) == 1
     assert offers[0].urls[0].url == "http://olx.pl/1"
@@ -49,7 +51,9 @@ async def test_fetch_offers_graceful_degradation_initial(mock_get, mock_delay, s
     mock_get.return_value = mock_response
 
     # Should return empty list, not raise
-    offers = await scraper.fetch_offers("https://www.olx.pl/praca/")
+    offers = []
+    async for prog, page_offers in scraper.fetch_offers("https://www.olx.pl/praca/"):
+        offers.extend(page_offers)
     
     assert len(offers) == 0
     assert mock_get.call_count == 1
@@ -73,7 +77,9 @@ async def test_fetch_offers_graceful_degradation_pagination(mock_get, mock_delay
     
     mock_get.side_effect = [mock_response_p1, mock_response_p2]
 
-    offers = await scraper.fetch_offers("https://www.olx.pl/praca/")
+    offers = []
+    async for prog, page_offers in scraper.fetch_offers("https://www.olx.pl/praca/"):
+        offers.extend(page_offers)
     
     # Should return offers from page 1, stop at page 2, not raise
     assert len(offers) == 1
@@ -91,6 +97,8 @@ async def test_fetch_with_retry_network_error(mock_get, mock_sleep, scraper):
         MagicMock(status_code=200, text='{"props": {"pageProps": {"data": {"ads": [], "pagination": {"totalPages": 1}}}}}')
     ]
     
-    offers = await scraper.fetch_offers("https://www.olx.pl/praca/")
+    offers = []
+    async for prog, page_offers in scraper.fetch_offers("https://www.olx.pl/praca/"):
+        offers.extend(page_offers)
     assert len(offers) == 0
     assert mock_get.call_count == 3

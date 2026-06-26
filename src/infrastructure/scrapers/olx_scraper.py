@@ -2,8 +2,9 @@ import logging
 import re
 import httpx
 
+from typing import AsyncGenerator, Tuple
 from src.domain.interfaces import ScraperPort
-from src.domain.models import Offer
+from src.domain.models import Offer, SyncProgress
 from src.infrastructure.scrapers.base import (
     DEFAULT_HEADERS, 
     fetch_with_retry, 
@@ -28,12 +29,12 @@ class OlxScraper(ScraperPort):
         """Returns True if the URL belongs to OLX.pl."""
         return bool(self.OLX_URL_PATTERN.match(url))
         
-    async def fetch_offers(self, url: str) -> list[Offer]:
+    async def fetch_offers(self, url: str) -> AsyncGenerator[Tuple[SyncProgress, list[Offer]], None]:
         """
-        Fetch and parse offers from the OLX URL.
+        Fetch and parse offers from the OLX URL iteratively.
         Handles pagination and implements graceful degradation on blocks.
         """
-        all_offers = []
+        total_offers_found = 0
         
         # Max pages to fetch to prevent infinite loops or excessive fetching
         MAX_PAGES_TO_FETCH = 10
@@ -57,14 +58,16 @@ class OlxScraper(ScraperPort):
                     logger.warning(f"__PRERENDERED_STATE__ not found on {url}, falling back to HTML parser")
                     offers = parse_offers_from_html(html)
                     
-                all_offers.extend(offers)
+                total_offers_found += len(offers)
                 
                 # 3. Handle Pagination
                 pagination = extract_pagination_info(state)
                 current_page = pagination.get("current_page", 1)
-                total_pages = pagination.get("total_pages", 1)
+                total_pages = min(pagination.get("total_pages", 1), MAX_PAGES_TO_FETCH)
                 
                 logger.info(f"Fetched page {current_page}/{total_pages} from {url}. Found {len(offers)} offers.")
+                
+                yield SyncProgress(current_page, total_pages, total_offers_found), offers
                 
                 # Determine base URL for appending page param
                 # Handle existing query params correctly
@@ -93,12 +96,14 @@ class OlxScraper(ScraperPort):
                         else:
                             page_offers = parse_offers_from_html(page_response.text)
                             
-                        all_offers.extend(page_offers)
+                        total_offers_found += len(page_offers)
                         logger.info(f"Found {len(page_offers)} offers on page {current_page}.")
+                        
+                        yield SyncProgress(current_page, total_pages, total_offers_found), page_offers
                         
                     except ScraperBlockedError as e:
                         # Graceful degradation (D-01) on subsequent pages
-                        logger.warning(f"Scraping blocked during pagination: {e}. Returning {len(all_offers)} offers collected so far.")
+                        logger.warning(f"Scraping blocked during pagination: {e}. Stopping iteration.")
                         break
                     except Exception as e:
                         # Log and continue to next page on other errors
@@ -108,11 +113,9 @@ class OlxScraper(ScraperPort):
             except ScraperBlockedError as e:
                 # Graceful degradation (D-01) on the very first request
                 logger.warning(f"Scraping blocked on initial request: {e}. Returning 0 offers.")
-                return []
+                return
             except Exception as e:
                 logger.error(f"Failed to fetch offers from {url}: {e}")
                 # We raise here because if the first page completely fails due to network/parsing,
                 # the caller needs to know it's a hard failure, not an empty result.
                 raise
-                
-        return all_offers
