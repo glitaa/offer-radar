@@ -77,3 +77,9 @@ class Offer:
 class SearchSession:
     search_url: str
     id: Optional[int] = None
+
+@dataclass
+class SyncProgress:
+    current_page: int
+    total_pages: int
+    total_offers_found: int

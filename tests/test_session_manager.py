@@ -45,16 +45,24 @@ async def test_session_manager_sync_offers():
         Offer(fingerprint="test1", urls=[OfferUrl(url="test1")], title="title1"),
         Offer(fingerprint="test2", urls=[OfferUrl(url="test2")], title="title2"),
     ]
-    scraper.fetch_offers.return_value = mock_offers
+    
+    # Mock the async generator
+    from src.domain.models import SyncProgress
+    async def mock_fetch_offers(url):
+        yield SyncProgress(1, 1, 2), mock_offers
+        
+    scraper.fetch_offers = mock_fetch_offers
     
     manager = SessionManager(session_repo, offer_repo, scraper_factory)
     
-    await manager.sync_offers(1, "https://test.com")
+    # consume the generator
+    async for progress in manager.sync_offers(1, "https://test.com"):
+        pass
     
     scraper_factory.get_scraper.assert_called_with("https://test.com")
-    scraper.fetch_offers.assert_called_with("https://test.com")
     
     for l in mock_offers:
         assert l.session_id == 1
         
     offer_repo.add_batch.assert_called_once_with(mock_offers)
+

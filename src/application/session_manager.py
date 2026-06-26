@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, AsyncGenerator
 from src.domain.interfaces import OfferRepository, SearchSessionRepository
 from src.application.scraper_factory import ScraperFactory
-from src.domain.models import Offer, SearchSession, OfferStatus
+from src.domain.models import Offer, SearchSession, OfferStatus, SyncProgress
 
 class SessionManager:
     def __init__(
@@ -28,14 +28,19 @@ class SessionManager:
         await self._session_repo.add(session)
         return session
 
-    async def sync_offers(self, session_id: int, url: str) -> None:
+    async def sync_offers(self, session_id: int, url: str) -> AsyncGenerator[SyncProgress, None]:
         scraper = self._scraper_factory.get_scraper(url)
-        offers = await scraper.fetch_offers(url)
         
-        for offer in offers:
-            offer.session_id = session_id
-            
-        await self._offer_repo.add_batch(offers)
+        async for progress, offers in scraper.fetch_offers(url):
+            if not offers:
+                yield progress
+                continue
+                
+            for offer in offers:
+                offer.session_id = session_id
+                
+            await self._offer_repo.add_batch(offers)
+            yield progress
 
     async def get_unseen_offers(self, session_id: int) -> List[Offer]:
         return await self._offer_repo.get_unseen_for_session(session_id)
