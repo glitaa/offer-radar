@@ -4,6 +4,7 @@ import msvcrt
 import sys
 from rich.console import Console
 from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from src.infrastructure.database.orm_models import Base
 from src.infrastructure.repositories.search_session_repository import SQLiteSearchSessionRepository
@@ -14,6 +15,24 @@ from src.application.session_manager import SessionManager
 from src.domain.models import SearchSession, OfferStatus, OfferCategory
 
 console = Console()
+
+async def sync_with_progress(session_manager: SessionManager, session: SearchSession):
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        TimeElapsedColumn(),
+    ) as progress:
+        task_id = progress.add_task("[cyan]Syncing offers...", total=1)
+        
+        async for progress_info in session_manager.sync_offers(session.id, session.search_url):
+            progress.update(
+                task_id, 
+                completed=progress_info.current_page, 
+                total=progress_info.total_pages,
+                description=f"[cyan]Syncing offers... (Found {progress_info.total_offers_found} offers so far)"
+            )
 
 async def run_loop(session_manager: SessionManager, session: SearchSession):
     while True:
@@ -108,7 +127,7 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
             except UnicodeDecodeError:
                 continue
             if key == 'y':
-                await session_manager.sync_offers(session.id, session.search_url)
+                await sync_with_progress(session_manager, session)
                 break
             elif key == 'n':
                 return
@@ -139,8 +158,7 @@ async def main_async():
         
         search_session = await manager.start_session(search_param)
         
-        console.print("[cyan]Syncing offers...[/cyan]")
-        await manager.sync_offers(search_session.id, search_session.search_url)
+        await sync_with_progress(manager, search_session)
         
         await run_loop(manager, search_session)
         
