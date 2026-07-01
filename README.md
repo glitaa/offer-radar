@@ -16,19 +16,13 @@ Currently supports: **OLX.pl** (Jobs and Real Estate)
 
 1. Clone or download this repository.
 2. Open a terminal in the repository folder.
-3. Run the script for your OS:
+3. Run the application via `uv`:
 
-**Windows:**
-```cmd
-.\offer-radar.bat --query "laptop"
-```
-
-**Linux / macOS:**
 ```bash
-./offer-radar --query "laptop"
+uv run offer-radar --query "laptop"
 ```
 
-*(On the first run, the script will automatically use `uv` to download the required Python version, create a virtual environment, and install all dependencies before starting the application.)*
+*(On the first run, `uv` will automatically download the required Python version, create a virtual environment, and install all dependencies before starting the application.)*
 
 ## Usage
 
@@ -36,10 +30,10 @@ You can start a session using either a search query or a direct OLX URL:
 
 ```bash
 # Search by query
-./offer-radar --query "recepcjonista kraków"
+uv run offer-radar --query "recepcjonista kraków"
 
 # Search using a direct OLX URL (useful for complex filters)
-./offer-radar --url "https://www.olx.pl/nieruchomosci/mieszkania/wynajem/krakow/?search%5Bfilter_float_price%3Ato%5D=3000"
+uv run offer-radar --url "https://www.olx.pl/nieruchomosci/mieszkania/wynajem/krakow/?search%5Bfilter_float_price%3Ato%5D=3000"
 ```
 
 Once running, the application will fetch listings and present you with the first unseen one. Use the following keyboard shortcuts to manage listings:
