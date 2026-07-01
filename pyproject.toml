@@ -29,3 +29,16 @@ dependencies = [
     "sqlalchemy==2.0.51",
     "typing-extensions==4.15.0",
 ]
+
+[project.scripts]
+offer-radar = "src.cli.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
