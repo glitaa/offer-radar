@@ -47,3 +47,12 @@ class SessionManager:
 
     async def mark_offer(self, offer_id: int, status: OfferStatus) -> None:
         await self._offer_repo.update_status(offer_id, status.value)
+
+    async def get_all_sessions(self) -> List[SearchSession]:
+        return await self._session_repo.get_all()
+
+    async def delete_session(self, session_id: int) -> None:
+        await self._session_repo.delete(session_id)
+
+    async def count_offers_for_session(self, session_id: int) -> int:
+        return await self._offer_repo.count_for_session(session_id)

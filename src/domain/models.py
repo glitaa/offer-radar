@@ -78,6 +78,16 @@ class SearchSession:
     search_url: str
     id: Optional[int] = None
 
+    @property
+    def display_name(self) -> str:
+        import urllib.parse
+        import re
+        match = re.search(r'q-([^/?]+)', self.search_url)
+        if match:
+            raw_query = urllib.parse.unquote(match.group(1))
+            return raw_query.replace('-', ' ')
+        return self.search_url
+
 @dataclass
 class SyncProgress:
     current_page: int

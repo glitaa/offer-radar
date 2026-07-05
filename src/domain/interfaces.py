@@ -23,6 +23,10 @@ class OfferRepository(ABC):
     async def update_status(self, offer_id: int, status: str) -> None:
         pass
 
+    @abstractmethod
+    async def count_for_session(self, session_id: int) -> int:
+        pass
+
 class SearchSessionRepository(ABC):
     @abstractmethod
     async def add(self, session: SearchSession) -> None:
@@ -30,6 +34,14 @@ class SearchSessionRepository(ABC):
 
     @abstractmethod
     async def get_by_url(self, url: str) -> Optional[SearchSession]:
+        pass
+
+    @abstractmethod
+    async def get_all(self) -> List[SearchSession]:
+        pass
+
+    @abstractmethod
+    async def delete(self, session_id: int) -> None:
         pass
 
 

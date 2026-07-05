@@ -178,3 +178,9 @@ class SQLiteOfferRepository(OfferRepository):
         if orm_model:
             orm_model.status = status
             await self.session.commit()
+
+    async def count_for_session(self, session_id: int) -> int:
+        from sqlalchemy import func
+        stmt = select(func.count(OfferORM.id)).where(OfferORM.session_id == session_id)
+        result = await self.session.execute(stmt)
+        return result.scalar() or 0

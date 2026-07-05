@@ -148,6 +148,11 @@ async def main_async(url: Optional[str], query: Optional[str]):
         
         manager = SessionManager(session_repo, offer_repo, scraper_factory)
         
+        if not url and not query:
+            from src.cli.menu import run_main_menu
+            await run_main_menu(manager, run_loop, sync_with_progress)
+            return
+
         search_param = url if url else query
         console.print(f"[cyan]Starting session for: {search_param}[/cyan]")
         
@@ -164,10 +169,6 @@ def cli_main(
     url: Optional[str] = typer.Option(None, "--url", help="Direct URL to OLX search"),
     query: Optional[str] = typer.Option(None, "--query", help="Search query")
 ):
-    if not url and not query:
-        from src.cli.menu import run_main_menu
-        run_main_menu()
-        return
     if url and query:
         console.print("[red]Error: Please provide either --url or --query, not both.[/red]")
         raise typer.Exit(1)

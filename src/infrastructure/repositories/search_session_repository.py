@@ -28,3 +28,21 @@ class SQLiteSearchSessionRepository(SearchSessionRepository):
                 search_url=orm_model.search_url
             )
         return None
+
+    async def get_all(self) -> list[SearchSession]:
+        stmt = select(SearchSessionORM)
+        result = await self.session.execute(stmt)
+        orm_models = result.scalars().all()
+        return [
+            SearchSession(id=model.id, search_url=model.search_url)
+            for model in orm_models
+        ]
+
+    async def delete(self, session_id: int) -> None:
+        stmt = select(SearchSessionORM).where(SearchSessionORM.id == session_id)
+        result = await self.session.execute(stmt)
+        orm_model = result.scalar_one_or_none()
+        
+        if orm_model:
+            await self.session.delete(orm_model)
+            await self.session.commit()
