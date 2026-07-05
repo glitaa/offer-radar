@@ -1,7 +1,8 @@
 import asyncio
-import argparse
 import msvcrt
 import sys
+import typer
+from typing import Optional
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn
@@ -14,6 +15,7 @@ from src.application.session_manager import SessionManager
 from src.application.session_manager import SessionManager
 from src.domain.models import SearchSession, OfferStatus, OfferCategory
 
+app = typer.Typer(invoke_without_command=True)
 console = Console()
 
 async def sync_with_progress(session_manager: SessionManager, session: SearchSession):
@@ -132,14 +134,7 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
             elif key == 'n':
                 return
             
-async def main_async():
-    parser = argparse.ArgumentParser(description="Offer-Radar CLI")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--url", help="Direct URL to OLX search")
-    group.add_argument("--query", help="Search query")
-    
-    args = parser.parse_args()
-    
+async def main_async(url: Optional[str], query: Optional[str]):
     engine = create_async_engine("sqlite+aiosqlite:///offer_radar.db", echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -153,7 +148,7 @@ async def main_async():
         
         manager = SessionManager(session_repo, offer_repo, scraper_factory)
         
-        search_param = args.url if args.url else args.query
+        search_param = url if url else query
         console.print(f"[cyan]Starting session for: {search_param}[/cyan]")
         
         search_session = await manager.start_session(search_param)
@@ -164,8 +159,23 @@ async def main_async():
         
     await engine.dispose()
 
+@app.callback()
+def cli_main(
+    url: Optional[str] = typer.Option(None, "--url", help="Direct URL to OLX search"),
+    query: Optional[str] = typer.Option(None, "--query", help="Search query")
+):
+    if not url and not query:
+        from src.cli.menu import run_main_menu
+        run_main_menu()
+        return
+    if url and query:
+        console.print("[red]Error: Please provide either --url or --query, not both.[/red]")
+        raise typer.Exit(1)
+    
+    asyncio.run(main_async(url=url, query=query))
+
 def main():
-    asyncio.run(main_async())
+    app()
 
 if __name__ == "__main__":
     main()
