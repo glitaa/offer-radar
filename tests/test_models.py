@@ -1,5 +1,5 @@
 import pytest
-from src.domain.models import Offer, OfferPrice, OfferUrl, OfferStatus
+from src.domain.models import Offer, OfferPrice, OfferUrl, OfferStatus, Settings
 
 def test_offer_price_instantiation():
     price = OfferPrice(price_min=100.0, price_max=200.0, currency="PLN", period="month", special_status="negotiable")
@@ -40,3 +40,8 @@ def test_post_init_fingerprint_generation():
     
     offer_manual = Offer(title="Manual fingerprint", fingerprint="12345")
     assert offer_manual.fingerprint == "12345"
+
+def test_settings_default_instantiation():
+    settings = Settings()
+    assert settings.language == "en"
+    assert settings.auto_open_browser is True
