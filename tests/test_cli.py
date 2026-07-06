@@ -21,7 +21,8 @@ async def test_cli_loop_actions():
         mock_getch.side_effect = [b's', b'r', b'k', b'q']
         
         with patch('src.cli.main.console.print') as mock_print:
-            await run_loop(session_manager, session)
+            settings_repo_mock = MagicMock()
+            await run_loop(session_manager, session, settings_repo_mock)
             
             # Assert interactions
             session_manager.mark_offer.assert_any_call(10, OfferStatus.SAVED)

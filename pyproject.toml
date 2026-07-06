@@ -24,9 +24,11 @@ dependencies = [
     "pygments==2.20.0",
     "pytest==9.1.0",
     "pytest-asyncio==1.4.0",
+    "questionary>=2.1.1",
     "rich==15.0.0",
     "soupsieve==2.8.4",
     "sqlalchemy==2.0.51",
+    "typer>=0.26.8",
     "typing-extensions==4.15.0",
 ]
 
@@ -42,3 +44,8 @@ package = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[dependency-groups]
+dev = [
+    "babel>=2.18.0",
+]

@@ -1,0 +1,130 @@
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-07-06 18:39+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: src/cli/main.py:169
+#, python-brace-format
+msgid "Starting session for: {search_param}"
+msgstr ""
+
+#: src/cli/menu.py:12
+#, python-brace-format
+msgid "Language (Current: {lang})"
+msgstr ""
+
+#: src/cli/menu.py:13
+#, python-brace-format
+msgid "Auto-open browser (Current: {auto})"
+msgstr ""
+
+#: src/cli/menu.py:14 src/cli/menu.py:85 src/cli/menu.py:97
+msgid "Back"
+msgstr ""
+
+#: src/cli/menu.py:17
+msgid "Settings Menu"
+msgstr ""
+
+#: src/cli/menu.py:30
+msgid "Select language"
+msgstr ""
+
+#: src/cli/menu.py:38 src/cli/menu.py:50
+msgid "Error saving settings"
+msgstr ""
+
+#: src/cli/menu.py:42
+msgid "Auto-open browser when showing offers?"
+msgstr ""
+
+#: src/cli/menu.py:55
+msgid "Offer-Radar Main Menu"
+msgstr ""
+
+#: src/cli/menu.py:57 src/cli/menu.py:68
+msgid "Create new search"
+msgstr ""
+
+#: src/cli/menu.py:58 src/cli/menu.py:78
+msgid "Manage existing searches"
+msgstr ""
+
+#: src/cli/menu.py:59 src/cli/menu.py:115
+msgid "Settings"
+msgstr ""
+
+#: src/cli/menu.py:60 src/cli/menu.py:64
+msgid "Exit"
+msgstr ""
+
+#: src/cli/menu.py:65
+msgid "Exiting... Goodbye!"
+msgstr ""
+
+#: src/cli/menu.py:69
+msgid "Enter a search query or URL:"
+msgstr ""
+
+#: src/cli/menu.py:74
+#, python-brace-format
+msgid "[cyan]Started session for: {name}[/cyan]"
+msgstr ""
+
+#: src/cli/menu.py:81
+msgid "[yellow]No existing searches found.[/yellow]"
+msgstr ""
+
+#: src/cli/menu.py:88
+msgid "Select a search to manage"
+msgstr ""
+
+#: src/cli/menu.py:96
+#, python-brace-format
+msgid "Manage '{name}'"
+msgstr ""
+
+#: src/cli/menu.py:97 src/cli/menu.py:100
+msgid "Run search"
+msgstr ""
+
+#: src/cli/menu.py:97 src/cli/menu.py:105
+msgid "Delete search"
+msgstr ""
+
+#: src/cli/menu.py:101
+#, python-brace-format
+msgid "[cyan]Running session: {name}[/cyan]"
+msgstr ""
+
+#: src/cli/menu.py:108
+#, python-brace-format
+msgid ""
+"Are you sure? This will delete the session '{name}' and {count} linked "
+"offers."
+msgstr ""
+
+#: src/cli/menu.py:113
+#, python-brace-format
+msgid "[green]Session '{name}' deleted.[/green]"
+msgstr ""
+
+#: src/cli/menu.py:119
+#, python-brace-format
+msgid "[yellow]'{choice}' is not implemented yet.[/yellow]"
+msgstr ""
+

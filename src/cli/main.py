@@ -12,8 +12,11 @@ from src.infrastructure.repositories.search_session_repository import SQLiteSear
 from src.infrastructure.repositories.offer_repository import SQLiteOfferRepository
 from src.application.scraper_factory import ScraperFactory
 from src.application.session_manager import SessionManager
-from src.application.session_manager import SessionManager
 from src.domain.models import SearchSession, OfferStatus, OfferCategory
+import builtins
+import webbrowser
+from src.infrastructure.repositories.toml_settings_repository import TOMLSettingsRepository
+from src.cli.i18n import setup_i18n
 
 app = typer.Typer(invoke_without_command=True)
 console = Console()
@@ -36,8 +39,9 @@ async def sync_with_progress(session_manager: SessionManager, session: SearchSes
                 description=f"[cyan]Syncing offers... (Found {progress_info.total_offers_found} offers so far)"
             )
 
-async def run_loop(session_manager: SessionManager, session: SearchSession):
+async def run_loop(session_manager: SessionManager, session: SearchSession, settings_repo: TOMLSettingsRepository):
     while True:
+        settings = settings_repo.get_settings()
         unseen_offers = await session_manager.get_unseen_offers(session.id)
         if not unseen_offers:
             console.print("[bold yellow]No new offers found.[/bold yellow]")
@@ -74,6 +78,9 @@ async def run_loop(session_manager: SessionManager, session: SearchSession):
                 
                 if offer.price.is_negotiable:
                     price_display += " (Negotiable)"
+
+            if settings.auto_open_browser and offer.urls:
+                webbrowser.open(offer.urls[0].url)
 
             content = (
                 f"[bold]{price_label}:[/bold] {price_display}\n"
@@ -145,22 +152,27 @@ async def main_async(url: Optional[str], query: Optional[str]):
         session_repo = SQLiteSearchSessionRepository(session)
         offer_repo = SQLiteOfferRepository(session)
         scraper_factory = ScraperFactory.create_default()
+        settings_repo = TOMLSettingsRepository()
+        
+        settings = settings_repo.get_settings()
+        _ = setup_i18n(settings.language)
+        builtins._ = _
         
         manager = SessionManager(session_repo, offer_repo, scraper_factory)
         
         if not url and not query:
             from src.cli.menu import run_main_menu
-            await run_main_menu(manager, run_loop, sync_with_progress)
+            await run_main_menu(manager, run_loop, sync_with_progress, settings_repo)
             return
 
         search_param = url if url else query
-        console.print(f"[cyan]Starting session for: {search_param}[/cyan]")
+        console.print(_("Starting session for: {search_param}").format(search_param=search_param))
         
         search_session = await manager.start_session(search_param)
         
         await sync_with_progress(manager, search_session)
         
-        await run_loop(manager, search_session)
+        await run_loop(manager, search_session, settings_repo)
         
     await engine.dispose()
 
