@@ -34,3 +34,6 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# App configuration
+config.toml
