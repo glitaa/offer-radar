@@ -93,3 +93,9 @@ class SyncProgress:
     current_page: int
     total_pages: int
     total_offers_found: int
+
+@dataclass
+class Settings:
+    language: str = "en"
+    auto_open_browser: bool = True
+
