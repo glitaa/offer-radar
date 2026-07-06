@@ -37,6 +37,11 @@ def parse_offers_from_json(state: dict) -> list[Offer]:
                 if not url or not title:
                     continue # Minimum required fields
                     
+                if url and not url.startswith("http"):
+                    if not url.startswith("/"):
+                        url = "/" + url
+                    url = f"https://www.olx.pl{url}"
+                    
                 # Handle category (Real Estate or Jobs)
                 category = None
                 salary = ad.get("salary")
@@ -160,6 +165,10 @@ def parse_offers_from_html(html: str) -> list[Offer]:
                     continue
                     
                 url = str(a_tag['href'])
+                if url and not url.startswith("http"):
+                    if not url.startswith("/"):
+                        url = "/" + url
+                    url = f"https://www.olx.pl{url}"
                 
                 title_elem = card.find('h6')
                 title = title_elem.text.strip() if title_elem else "Unknown Title"

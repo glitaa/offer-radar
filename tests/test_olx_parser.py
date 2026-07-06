@@ -73,7 +73,7 @@ def test_parse_offers_from_json(sample_state):
     assert len(offers) == 3  # The one missing URL is skipped
     
     job = offers[0]
-    assert job.urls[0].url == "/oferta/1"
+    assert job.urls[0].url == "https://www.olx.pl/oferta/1"
     assert job.title == "Full Listing Jobs"
     assert job.category == OfferCategory.JOB
     assert job.price is not None
@@ -95,7 +95,7 @@ def test_parse_offers_from_json(sample_state):
     assert re_listing.location == "Kraków"
     
     partial = offers[2]
-    assert partial.urls[0].url == "/oferta/3"
+    assert partial.urls[0].url == "https://www.olx.pl/oferta/3"
     assert partial.title == "Partial Listing"
     assert partial.category is None
     assert partial.price is None
@@ -123,6 +123,6 @@ def test_parse_offers_from_html():
     '''
     offers = parse_offers_from_html(html)
     assert len(offers) == 1
-    assert offers[0].urls[0].url == "/oferta/test"
+    assert offers[0].urls[0].url == "https://www.olx.pl/oferta/test"
     assert offers[0].title == "Test Listing"
 
