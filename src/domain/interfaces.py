@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from .models import Offer, SearchSession
+from .models import Offer, SearchSession, Settings
 
 class OfferRepository(ABC):
     @abstractmethod
@@ -67,4 +67,13 @@ class ScraperPort(ABC):
 
         Used by ScraperFactory to route URLs to the correct adapter (D-06).
         """
+        pass
+
+class SettingsRepository(ABC):
+    @abstractmethod
+    def get_settings(self) -> Settings:
+        pass
+
+    @abstractmethod
+    def save_settings(self, settings: Settings) -> None:
         pass
