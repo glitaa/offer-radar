@@ -20,6 +20,7 @@ from src.cli.i18n import setup_i18n
 
 app = typer.Typer(invoke_without_command=True)
 console = Console()
+_ = lambda x: getattr(builtins, '_', lambda s: s)(x)
 
 async def sync_with_progress(session_manager: SessionManager, session: SearchSession):
     with Progress(
@@ -29,14 +30,14 @@ async def sync_with_progress(session_manager: SessionManager, session: SearchSes
         TaskProgressColumn(),
         TimeElapsedColumn(),
     ) as progress:
-        task_id = progress.add_task("[cyan]Syncing offers...", total=1)
+        task_id = progress.add_task(_("[cyan]Syncing offers..."), total=1)
         
         async for progress_info in session_manager.sync_offers(session.id, session.search_url):
             progress.update(
                 task_id, 
                 completed=progress_info.current_page, 
                 total=progress_info.total_pages,
-                description=f"[cyan]Syncing offers... (Found {progress_info.total_offers_found} offers so far)"
+                description=_("[cyan]Syncing offers... (Found {count} offers so far)").format(count=progress_info.total_offers_found)
             )
 
 async def run_loop(session_manager: SessionManager, session: SearchSession, settings_repo: TOMLSettingsRepository):
@@ -44,7 +45,7 @@ async def run_loop(session_manager: SessionManager, session: SearchSession, sett
         settings = settings_repo.get_settings()
         unseen_offers = await session_manager.get_unseen_offers(session.id)
         if not unseen_offers:
-            console.print("[bold yellow]No new offers found.[/bold yellow]")
+            console.print(_("[bold yellow]No new offers found.[/bold yellow]"))
             break
 
         saved = 0
@@ -59,12 +60,12 @@ async def run_loop(session_manager: SessionManager, session: SearchSession, sett
             if offer.urls and len(offer.urls) > 1:
                 first_url += f" (+ {len(offer.urls) - 1} other links)"
 
-            price_label = "Salary" if offer.category == OfferCategory.JOB else "Price"
+            price_label = _("Salary") if offer.category == OfferCategory.JOB else _("Price")
             
-            price_display = "Unknown"
+            price_display = _("Unknown")
             if offer.price:
                 if offer.price.is_free:
-                    price_display = "Free"
+                    price_display = _("Free")
                 else:
                     min_p = offer.price.price_min
                     max_p = offer.price.price_max
@@ -77,17 +78,17 @@ async def run_loop(session_manager: SessionManager, session: SearchSession, sett
                         price_display = f"{min_p} {curr}{period}".strip()
                 
                 if offer.price.is_negotiable:
-                    price_display += " (Negotiable)"
+                    price_display += " (" + _("Negotiable") + ")"
 
             if settings.auto_open_browser and offer.urls:
                 webbrowser.open(offer.urls[0].url)
 
             content = (
                 f"[bold]{price_label}:[/bold] {price_display}\n"
-                f"[bold]Location:[/bold] {offer.location or 'N/A'}\n"
-                f"[bold]URL:[/bold] {first_url}\n\n"
+                f"[bold]{_('Location')}:[/bold] {offer.location or _('N/A')}\n"
+                f"[bold]{_('URL')}:[/bold] {first_url}\n\n"
                 f"{snippet}\n\n"
-                f"[cyan](s) Save  (r) Reject  (k) Skip  (q) Quit[/cyan]"
+                f"[cyan](s) {_('Save')}  (r) {_('Reject')}  (k) {_('Skip')}  (q) {_('Quit')}[/cyan]"
             )
             
             console.print(Panel(content, title=f"[bold green]{offer.title}[/bold green]", expand=False))
@@ -120,12 +121,12 @@ async def run_loop(session_manager: SessionManager, session: SearchSession, sett
             if quit_requested:
                 break
 
-        console.print(f"Session Summary - Saved: {saved}, Rejected: {rejected}, Skipped: {skipped}")
+        console.print(_("Session Summary - Saved: {saved}, Rejected: {rejected}, Skipped: {skipped}").format(saved=saved, rejected=rejected, skipped=skipped))
 
         if quit_requested:
             break
 
-        console.print("Check for new results? (y/n)")
+        console.print(_("Check for new results? (y/n)"))
         while True:
             key_bytes = msvcrt.getch()
             if key_bytes in (b'\x00', b'\xe0'):
@@ -155,8 +156,7 @@ async def main_async(url: Optional[str], query: Optional[str]):
         settings_repo = TOMLSettingsRepository()
         
         settings = settings_repo.get_settings()
-        _ = setup_i18n(settings.language)
-        builtins._ = _
+        builtins._ = setup_i18n(settings.language)
         
         manager = SessionManager(session_repo, offer_repo, scraper_factory)
         
@@ -182,7 +182,7 @@ def cli_main(
     query: Optional[str] = typer.Option(None, "--query", help="Search query")
 ):
     if url and query:
-        console.print("[red]Error: Please provide either --url or --query, not both.[/red]")
+        console.print(_("[red]Error: Please provide either --url or --query, not both.[/red]"))
         raise typer.Exit(1)
     
     asyncio.run(main_async(url=url, query=query))
