@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-06 18:39+0200\n"
+"POT-Creation-Date: 2026-07-06 21:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,113 +17,216 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#: src/cli/main.py:33
+msgid "[cyan]Syncing offers..."
+msgstr ""
+
+#: src/cli/main.py:40
+#, python-brace-format
+msgid "[cyan]Syncing offers... (Found {count} offers so far)"
+msgstr ""
+
+#: src/cli/main.py:48
+msgid "[bold yellow]No new offers found.[/bold yellow]"
+msgstr ""
+
+#: src/cli/main.py:63
+msgid "Salary"
+msgstr ""
+
+#: src/cli/main.py:63
+msgid "Price"
+msgstr ""
+
+#: src/cli/main.py:65
+msgid "Unknown"
+msgstr ""
+
+#: src/cli/main.py:68
+msgid "Free"
+msgstr ""
+
+#: src/cli/main.py:81
+msgid "Negotiable"
+msgstr ""
+
+#: src/cli/main.py:88
+msgid "Location"
+msgstr ""
+
+#: src/cli/main.py:88
+msgid "N/A"
+msgstr ""
+
+#: src/cli/main.py:89
+msgid "URL"
+msgstr ""
+
+#: src/cli/main.py:91
+msgid "Save"
+msgstr ""
+
+#: src/cli/main.py:91
+msgid "Reject"
+msgstr ""
+
+#: src/cli/main.py:91
+msgid "Skip"
+msgstr ""
+
+#: src/cli/main.py:91
+msgid "Quit"
+msgstr ""
+
+#: src/cli/main.py:124
+#, python-brace-format
+msgid "Session Summary - Saved: {saved}, Rejected: {rejected}, Skipped: {skipped}"
+msgstr ""
+
+#: src/cli/main.py:129
+msgid "Check for new results? (y/n)"
+msgstr ""
+
 #: src/cli/main.py:169
 #, python-brace-format
 msgid "Starting session for: {search_param}"
 msgstr ""
 
-#: src/cli/menu.py:12
-#, python-brace-format
-msgid "Language (Current: {lang})"
+#: src/cli/main.py:185
+msgid "[red]Error: Please provide either --url or --query, not both.[/red]"
+msgstr ""
+
+#: src/cli/menu.py:12 src/cli/menu.py:32
+msgid "English"
+msgstr ""
+
+#: src/cli/menu.py:12 src/cli/menu.py:33
+msgid "Polish"
 msgstr ""
 
 #: src/cli/menu.py:13
 #, python-brace-format
-msgid "Auto-open browser (Current: {auto})"
+msgid "Language: {lang}"
 msgstr ""
 
-#: src/cli/menu.py:14 src/cli/menu.py:85 src/cli/menu.py:97
+#: src/cli/menu.py:14 src/cli/menu.py:50
+msgid "On"
+msgstr ""
+
+#: src/cli/menu.py:14 src/cli/menu.py:51
+msgid "Off"
+msgstr ""
+
+#: src/cli/menu.py:15
+#, python-brace-format
+msgid "Auto-open browser: {auto}"
+msgstr ""
+
+#: src/cli/menu.py:16 src/cli/menu.py:98 src/cli/menu.py:112
 msgid "Back"
 msgstr ""
 
-#: src/cli/menu.py:17
+#: src/cli/menu.py:19
 msgid "Settings Menu"
 msgstr ""
 
-#: src/cli/menu.py:30
+#: src/cli/menu.py:20 src/cli/menu.py:36 src/cli/menu.py:54 src/cli/menu.py:68
+#: src/cli/menu.py:102 src/cli/menu.py:111
+msgid "(Use arrow keys)"
+msgstr ""
+
+#: src/cli/menu.py:26 src/cli/menu.py:38 src/cli/menu.py:56 src/cli/menu.py:75
+#: src/cli/menu.py:82 src/cli/menu.py:104 src/cli/menu.py:113
+#: src/cli/menu.py:124
+msgid ""
+"\n"
+"Cancelled by user\n"
+msgstr ""
+
+#: src/cli/menu.py:35
 msgid "Select language"
 msgstr ""
 
-#: src/cli/menu.py:38 src/cli/menu.py:50
+#: src/cli/menu.py:47 src/cli/menu.py:62
 msgid "Error saving settings"
 msgstr ""
 
-#: src/cli/menu.py:42
+#: src/cli/menu.py:53
 msgid "Auto-open browser when showing offers?"
 msgstr ""
 
-#: src/cli/menu.py:55
-msgid "Offer-Radar Main Menu"
+#: src/cli/menu.py:67
+msgid "Offer-Radar"
 msgstr ""
 
-#: src/cli/menu.py:57 src/cli/menu.py:68
+#: src/cli/menu.py:70 src/cli/menu.py:81
 msgid "Create new search"
 msgstr ""
 
-#: src/cli/menu.py:58 src/cli/menu.py:78
+#: src/cli/menu.py:71 src/cli/menu.py:91
 msgid "Manage existing searches"
 msgstr ""
 
-#: src/cli/menu.py:59 src/cli/menu.py:115
+#: src/cli/menu.py:72 src/cli/menu.py:130
 msgid "Settings"
 msgstr ""
 
-#: src/cli/menu.py:60 src/cli/menu.py:64
+#: src/cli/menu.py:73 src/cli/menu.py:77
 msgid "Exit"
 msgstr ""
 
-#: src/cli/menu.py:65
+#: src/cli/menu.py:78
 msgid "Exiting... Goodbye!"
 msgstr ""
 
-#: src/cli/menu.py:69
+#: src/cli/menu.py:82
 msgid "Enter a search query or URL:"
 msgstr ""
 
-#: src/cli/menu.py:74
+#: src/cli/menu.py:87
 #, python-brace-format
 msgid "[cyan]Started session for: {name}[/cyan]"
 msgstr ""
 
-#: src/cli/menu.py:81
+#: src/cli/menu.py:94
 msgid "[yellow]No existing searches found.[/yellow]"
 msgstr ""
 
-#: src/cli/menu.py:88
+#: src/cli/menu.py:101
 msgid "Select a search to manage"
 msgstr ""
 
-#: src/cli/menu.py:96
+#: src/cli/menu.py:110
 #, python-brace-format
 msgid "Manage '{name}'"
 msgstr ""
 
-#: src/cli/menu.py:97 src/cli/menu.py:100
+#: src/cli/menu.py:112 src/cli/menu.py:115
 msgid "Run search"
 msgstr ""
 
-#: src/cli/menu.py:97 src/cli/menu.py:105
+#: src/cli/menu.py:112 src/cli/menu.py:120
 msgid "Delete search"
 msgstr ""
 
-#: src/cli/menu.py:101
+#: src/cli/menu.py:116
 #, python-brace-format
 msgid "[cyan]Running session: {name}[/cyan]"
 msgstr ""
 
-#: src/cli/menu.py:108
+#: src/cli/menu.py:123
 #, python-brace-format
 msgid ""
 "Are you sure? This will delete the session '{name}' and {count} linked "
 "offers."
 msgstr ""
 
-#: src/cli/menu.py:113
+#: src/cli/menu.py:128
 #, python-brace-format
 msgid "[green]Session '{name}' deleted.[/green]"
 msgstr ""
 
-#: src/cli/menu.py:119
+#: src/cli/menu.py:134
 #, python-brace-format
 msgid "[yellow]'{choice}' is not implemented yet.[/yellow]"
 msgstr ""
