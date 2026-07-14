@@ -3,12 +3,13 @@ from src.domain.interfaces import OfferRepository, SearchSessionRepository
 from src.application.scraper_factory import ScraperFactory
 from src.domain.models import Offer, SearchSession, OfferStatus, SyncProgress
 
+
 class SessionManager:
     def __init__(
         self,
         session_repo: SearchSessionRepository,
         offer_repo: OfferRepository,
-        scraper_factory: ScraperFactory
+        scraper_factory: ScraperFactory,
     ):
         self._session_repo = session_repo
         self._offer_repo = offer_repo
@@ -28,17 +29,19 @@ class SessionManager:
         await self._session_repo.add(session)
         return session
 
-    async def sync_offers(self, session_id: int, url: str) -> AsyncGenerator[SyncProgress, None]:
+    async def sync_offers(
+        self, session_id: int, url: str
+    ) -> AsyncGenerator[SyncProgress, None]:
         scraper = self._scraper_factory.get_scraper(url)
-        
+
         async for progress, offers in scraper.fetch_offers(url):
             if not offers:
                 yield progress
                 continue
-                
+
             for offer in offers:
                 offer.session_id = session_id
-                
+
             await self._offer_repo.add_batch(offers)
             yield progress
 

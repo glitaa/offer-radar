@@ -7,17 +7,16 @@ from sqlalchemy.orm import selectinload
 from typing import List, Optional
 import json
 
+
 class SQLiteOfferRepository(OfferRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
-        
+
     async def add(self, offer: Offer) -> None:
         extra_data_json = json.dumps(offer.extra_data) if offer.extra_data else None
-        
+
         # Create URLs
-        url_orms = [
-            OfferUrlORM(url=u.url) for u in offer.urls
-        ]
+        url_orms = [OfferUrlORM(url=u.url) for u in offer.urls]
 
         price_min = offer.price.price_min if offer.price else None
         price_max = offer.price.price_max if offer.price else None
@@ -45,7 +44,7 @@ class SQLiteOfferRepository(OfferRepository):
             location=offer.location,
             description=offer.description,
             extra_data=extra_data_json,
-            urls=url_orms
+            urls=url_orms,
         )
         self.session.add(orm_model)
         await self.session.commit()
@@ -54,17 +53,23 @@ class SQLiteOfferRepository(OfferRepository):
     async def add_batch(self, offers: List[Offer]) -> None:
         if not offers:
             return
-            
+
         incoming_urls = [u.url for o in offers for u in o.urls]
         incoming_fingerprints = [o.fingerprint for o in offers]
 
         # Fetch existing URLs eager loading offer
-        stmt_urls = select(OfferUrlORM).where(OfferUrlORM.url.in_(incoming_urls)).options(selectinload(OfferUrlORM.offer))
+        stmt_urls = (
+            select(OfferUrlORM)
+            .where(OfferUrlORM.url.in_(incoming_urls))
+            .options(selectinload(OfferUrlORM.offer))
+        )
         result_urls = await self.session.execute(stmt_urls)
         existing_url_orms = {u.url: u for u in result_urls.scalars().all()}
 
         # Fetch existing fingerprints
-        stmt_fps = select(OfferORM).where(OfferORM.fingerprint.in_(incoming_fingerprints))
+        stmt_fps = select(OfferORM).where(
+            OfferORM.fingerprint.in_(incoming_fingerprints)
+        )
         result_fps = await self.session.execute(stmt_fps)
         existing_offer_orms = {o.fingerprint: o for o in result_fps.scalars().all()}
 
@@ -74,14 +79,14 @@ class SQLiteOfferRepository(OfferRepository):
         for offer in offers:
             if not offer.urls:
                 continue
-            
+
             url = offer.urls[0].url
 
             if url in processed_urls:
                 continue
-            
+
             existing_url_orm = existing_url_orms.get(url)
-            
+
             if existing_url_orm:
                 if existing_url_orm.offer.fingerprint != offer.fingerprint:
                     # Conflict D-01: Same URL, different fingerprint -> Delete old, insert new
@@ -99,30 +104,34 @@ class SQLiteOfferRepository(OfferRepository):
                 existing_offer_orm = existing_offer_orms.get(offer.fingerprint)
                 if existing_offer_orm:
                     # Fingerprint exists but URL doesn't -> add new URL to existing offer
-                    self.session.add(OfferUrlORM(url=url, offer_id=existing_offer_orm.id))
+                    self.session.add(
+                        OfferUrlORM(url=url, offer_id=existing_offer_orm.id)
+                    )
                 else:
                     # Totally new offer
                     await self.add(offer)
-            
+
             processed_urls.add(url)
             processed_fingerprints.add(offer.fingerprint)
-            
+
         # Commit any leftover additions from adding new URLs
         await self.session.commit()
 
     def _map_orm_to_domain(self, orm_model: OfferORM) -> Offer:
         extra_data = json.loads(orm_model.extra_data) if orm_model.extra_data else None
-        
-        has_price = any([
-            orm_model.price_min is not None, 
-            orm_model.price_max is not None, 
-            orm_model.currency is not None, 
-            orm_model.period is not None, 
-            orm_model.special_status is not None,
-            orm_model.is_free,
-            orm_model.is_negotiable
-        ])
-        
+
+        has_price = any(
+            [
+                orm_model.price_min is not None,
+                orm_model.price_max is not None,
+                orm_model.currency is not None,
+                orm_model.period is not None,
+                orm_model.special_status is not None,
+                orm_model.is_free,
+                orm_model.is_negotiable,
+            ]
+        )
+
         offer_price = None
         if has_price:
             offer_price = OfferPrice(
@@ -132,11 +141,13 @@ class SQLiteOfferRepository(OfferRepository):
                 period=orm_model.period,
                 special_status=orm_model.special_status,
                 is_free=orm_model.is_free,
-                is_negotiable=orm_model.is_negotiable
+                is_negotiable=orm_model.is_negotiable,
             )
-            
-        offer_category = OfferCategory(orm_model.category) if orm_model.category else None
-            
+
+        offer_category = (
+            OfferCategory(orm_model.category) if orm_model.category else None
+        )
+
         return Offer(
             id=orm_model.id,
             fingerprint=orm_model.fingerprint,
@@ -148,39 +159,48 @@ class SQLiteOfferRepository(OfferRepository):
             description=orm_model.description,
             extra_data=extra_data,
             urls=[OfferUrl(url=u.url) for u in orm_model.urls],
-            category=offer_category
+            category=offer_category,
         )
 
     async def get_by_fingerprint(self, fingerprint: str) -> Optional[Offer]:
-        stmt = select(OfferORM).where(OfferORM.fingerprint == fingerprint).options(selectinload(OfferORM.urls))
+        stmt = (
+            select(OfferORM)
+            .where(OfferORM.fingerprint == fingerprint)
+            .options(selectinload(OfferORM.urls))
+        )
         result = await self.session.execute(stmt)
         orm_model = result.scalar_one_or_none()
-        
+
         if orm_model:
             return self._map_orm_to_domain(orm_model)
         return None
 
     async def get_unseen_for_session(self, session_id: int) -> List[Offer]:
-        stmt = select(OfferORM).where(
-            OfferORM.session_id == session_id,
-            OfferORM.status == OfferStatus.NEW.value
-        ).options(selectinload(OfferORM.urls))
+        stmt = (
+            select(OfferORM)
+            .where(
+                OfferORM.session_id == session_id,
+                OfferORM.status == OfferStatus.NEW.value,
+            )
+            .options(selectinload(OfferORM.urls))
+        )
         result = await self.session.execute(stmt)
         orm_models = result.scalars().all()
-        
+
         return [self._map_orm_to_domain(orm_model) for orm_model in orm_models]
-        
+
     async def update_status(self, offer_id: int, status: str) -> None:
         stmt = select(OfferORM).where(OfferORM.id == offer_id)
         result = await self.session.execute(stmt)
         orm_model = result.scalar_one_or_none()
-        
+
         if orm_model:
             orm_model.status = status
             await self.session.commit()
 
     async def count_for_session(self, session_id: int) -> int:
         from sqlalchemy import func
+
         stmt = select(func.count(OfferORM.id)).where(OfferORM.session_id == session_id)
         result = await self.session.execute(stmt)
         return result.scalar() or 0

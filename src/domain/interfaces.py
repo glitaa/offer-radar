@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from .models import Offer, SearchSession, Settings
 
+
 class OfferRepository(ABC):
     @abstractmethod
     async def add(self, offer: Offer) -> None:
@@ -10,7 +11,7 @@ class OfferRepository(ABC):
     @abstractmethod
     async def add_batch(self, offers: List[Offer]) -> None:
         pass
-        
+
     @abstractmethod
     async def get_by_fingerprint(self, fingerprint: str) -> Optional[Offer]:
         pass
@@ -18,7 +19,7 @@ class OfferRepository(ABC):
     @abstractmethod
     async def get_unseen_for_session(self, session_id: int) -> List[Offer]:
         pass
-        
+
     @abstractmethod
     async def update_status(self, offer_id: int, status: str) -> None:
         pass
@@ -26,6 +27,7 @@ class OfferRepository(ABC):
     @abstractmethod
     async def count_for_session(self, session_id: int) -> int:
         pass
+
 
 class SearchSessionRepository(ABC):
     @abstractmethod
@@ -68,6 +70,7 @@ class ScraperPort(ABC):
         Used by ScraperFactory to route URLs to the correct adapter (D-06).
         """
         pass
+
 
 class SettingsRepository(ABC):
     @abstractmethod

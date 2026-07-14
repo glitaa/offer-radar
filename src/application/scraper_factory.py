@@ -2,6 +2,7 @@ from typing import List
 from src.domain.interfaces import ScraperPort
 from src.infrastructure.scrapers.olx_scraper import OlxScraper
 
+
 class ScraperFactory:
     """Factory that auto-detects the appropriate scraper based on URL (D-06)."""
 
@@ -18,6 +19,4 @@ class ScraperFactory:
     @classmethod
     def create_default(cls) -> "ScraperFactory":
         """Convenience method to create a factory with default scrapers registered."""
-        return cls([
-            OlxScraper()
-        ])
+        return cls([OlxScraper()])

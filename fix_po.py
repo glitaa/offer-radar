@@ -1,6 +1,6 @@
 import re
 
-with open('locales/pl/LC_MESSAGES/messages.po', 'r', encoding='utf-8') as f:
+with open("locales/pl/LC_MESSAGES/messages.po", "r", encoding="utf-8") as f:
     content = f.read()
 
 translations = {
@@ -52,15 +52,15 @@ translations = {
     r"English": "angielski",
     r"Polish": "polski",
     r"\(Use arrow keys\)": "(Użyj strzałek)",
-    r"\\nCancelled by user\\n": "\nAnulowano przez użytkownika\n"
+    r"\\nCancelled by user\\n": "\nAnulowano przez użytkownika\n",
 }
 
-lines = content.split('\n')
+lines = content.split("\n")
 new_lines = []
 for line in lines:
-    if not line.startswith('#~'):
+    if not line.startswith("#~"):
         new_lines.append(line)
-content = '\n'.join(new_lines)
+content = "\n".join(new_lines)
 
 for key, value in translations.items():
     pattern = r'(msgid "' + key + r'")\nmsgstr ""'
@@ -68,7 +68,10 @@ for key, value in translations.items():
     content = re.sub(pattern, replacement, content)
 
 for key, value in translations.items():
-    if key == r"Are you sure\? This will delete the session '\{name\}' and \{count\} linked offers\.":
+    if (
+        key
+        == r"Are you sure\? This will delete the session '\{name\}' and \{count\} linked offers\."
+    ):
         pattern = r'(msgid ""\n"Are you sure\? This will delete the session \'\{name\}\' and \{count\} linked "\n"offers\.")\nmsgstr ""'
         replacement = r'\1\nmsgstr "Czy na pewno? Zostanie usunięta sesja \'{name}\' oraz {count} połączonych ofert."'
         content = re.sub(pattern, replacement, content)
@@ -77,5 +80,5 @@ for key, value in translations.items():
         replacement = r'\1\nmsgstr "\\nAnulowano przez użytkownika\\n"'
         content = re.sub(pattern, replacement, content)
 
-with open('locales/pl/LC_MESSAGES/messages.po', 'w', encoding='utf-8') as f:
+with open("locales/pl/LC_MESSAGES/messages.po", "w", encoding="utf-8") as f:
     f.write(content)
