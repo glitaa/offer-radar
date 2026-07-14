@@ -28,5 +28,14 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Run Code Linter (Ruff)
+        run: uv run ruff check .
+
+      - name: Run Code Formatter (Ruff)
+        run: uv run ruff format --check .
+
+      - name: Check Translation Integrity (Babel)
+        run: uv run pybabel compile -d locales --statistics
+
       - name: Run tests
         run: uv run pytest
