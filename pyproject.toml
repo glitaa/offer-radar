@@ -49,4 +49,5 @@ packages = ["src"]
 [dependency-groups]
 dev = [
     "babel>=2.18.0",
+    "ruff>=0.15.21",
 ]
