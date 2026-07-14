@@ -1,6 +1,7 @@
 # Offer Radar
 
 [![CI](https://github.com/glitaa/offer-radar/actions/workflows/ci.yml/badge.svg)](https://github.com/glitaa/offer-radar/actions/workflows/ci.yml)
+
 Offer Radar is a local command-line tool that helps you review classifieds listings without repeatedly processing offers you have already seen. It fetches listings, stores your decisions locally, and presents unseen offers for review, making recurring searches faster and easier to manage.
 
 Currently supports: **OLX.pl** (Jobs and Real Estate)
@@ -95,6 +96,7 @@ The application fetches the matching listings, filters out offers that have alre
 - **Database**: [SQLite](https://www.sqlite.org/) with [SQLAlchemy](https://www.sqlalchemy.org/) and `aiosqlite` for asynchronous database operations.
 - **Testing**: [pytest](https://docs.pytest.org/) and `pytest-asyncio`.
 - **Linting & Formatting**: [Ruff](https://docs.astral.sh/ruff/) for blazingly fast Python linting and formatting.
+- **Localization**: [Babel](https://babel.pocoo.org/) for managing and compiling translation files.
 - **CI/CD**: GitHub Actions (for automated tests, linting, and translation integrity checks) and Dependabot.
 
 ## Development
