@@ -41,3 +41,7 @@ Once running, the application will fetch listings and present you with the first
 - `(r) Reject`: Marks the listing as rejected (you won't see it again).
 - `(k) Skip`: Skips the listing for now (you will see it again in future sessions).
 - `(q) Quit`: Exits the application and saves your progress.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
