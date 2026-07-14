@@ -1,5 +1,5 @@
 import asyncio
-import msvcrt
+import click
 import sys
 import typer
 from typing import Optional
@@ -94,14 +94,7 @@ async def run_loop(session_manager: SessionManager, session: SearchSession, sett
             console.print(Panel(content, title=f"[bold green]{offer.title}[/bold green]", expand=False))
 
             while True:
-                key_bytes = msvcrt.getch()
-                if key_bytes in (b'\x00', b'\xe0'):
-                    msvcrt.getch()
-                    continue
-                try:
-                    key = key_bytes.decode('utf-8').lower()
-                except UnicodeDecodeError:
-                    continue
+                key = click.getchar().lower()
                 if key == 's':
                     await session_manager.mark_offer(offer.id, OfferStatus.SAVED)
                     saved += 1
@@ -128,14 +121,7 @@ async def run_loop(session_manager: SessionManager, session: SearchSession, sett
 
         console.print(_("Check for new results? (y/n)"))
         while True:
-            key_bytes = msvcrt.getch()
-            if key_bytes in (b'\x00', b'\xe0'):
-                msvcrt.getch()
-                continue
-            try:
-                key = key_bytes.decode('utf-8').lower()
-            except UnicodeDecodeError:
-                continue
+            key = click.getchar().lower()
             if key == 'y':
                 await sync_with_progress(session_manager, session)
                 break

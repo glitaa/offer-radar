@@ -16,9 +16,9 @@ async def test_cli_loop_actions():
     
     session_manager.get_unseen_offers.return_value = [offer1, offer2, offer3, offer4]
     
-    with patch('src.cli.main.msvcrt.getch') as mock_getch:
+    with patch('src.cli.main.click.getchar') as mock_getch:
         # User presses 's' for offer1, 'r' for offer2, 'k' for offer3, 'q' for offer4
-        mock_getch.side_effect = [b's', b'r', b'k', b'q']
+        mock_getch.side_effect = ['s', 'r', 'k', 'q']
         
         with patch('src.cli.main.console.print') as mock_print:
             settings_repo_mock = MagicMock()
