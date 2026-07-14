@@ -1,5 +1,6 @@
 # Offer Radar
 
+[![CI](https://github.com/glitaa/offer-radar/actions/workflows/ci.yml/badge.svg)](https://github.com/glitaa/offer-radar/actions/workflows/ci.yml)
 Offer Radar is a local command-line tool that helps you review classifieds listings without repeatedly processing offers you have already seen. It fetches listings, stores your decisions locally, and presents unseen offers for review, making recurring searches faster and easier to manage.
 
 Currently supports: **OLX.pl** (Jobs and Real Estate)
