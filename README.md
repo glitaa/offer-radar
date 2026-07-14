@@ -13,6 +13,7 @@ Offer Radar solved that problem by keeping a local history of my decisions and s
 
 ## Features
 - **Interactive CLI:** Quickly review listings directly in your terminal.
+- **Cross-platform:** Works natively on Windows, macOS, and Linux.
 - **Local Database:** Stores which listings were saved, rejected or temporarily skipped.
 - **Session Management:** Save your progress and resume your search at any time.
 - **Multi-language Support:** The interface is currently available in English and Polish.
@@ -93,13 +94,28 @@ The application fetches the matching listings, filters out offers that have alre
 - **Web Scraping**: [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/) and [HTTPX](https://www.python-httpx.org/) (for asynchronous requests).
 - **Database**: [SQLite](https://www.sqlite.org/) with [SQLAlchemy](https://www.sqlalchemy.org/) and `aiosqlite` for asynchronous database operations.
 - **Testing**: [pytest](https://docs.pytest.org/) and `pytest-asyncio`.
+- **Linting & Formatting**: [Ruff](https://docs.astral.sh/ruff/) for blazingly fast Python linting and formatting.
+- **CI/CD**: GitHub Actions (for automated tests, linting, and translation integrity checks) and Dependabot.
 
-## Running the Tests
+## Development
 
 To run the automated test suite, use `uv` to execute `pytest`:
 
 ```bash
 uv run pytest
+```
+
+To run the linter and code formatter:
+
+```bash
+uv run ruff check .
+uv run ruff format .
+```
+
+To compile the latest translation files:
+
+```bash
+uv run pybabel compile -d locales
 ```
 
 ## Data Storage
