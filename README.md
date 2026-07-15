@@ -136,14 +136,17 @@ rm offer_radar.db
 
 ## Roadmap
 
-- [x] Interactive listing review
-- [x] Local persistence
-- [x] Initial automated test suite
+- [x] Interactive CLI listing review
+- [x] Local database persistence
+- [x] Offer deduplication via content fingerprinting
+- [x] Search session management
+- [x] In-app settings
+- [x] Multi-language support (English/Polish)
+- [x] Cross-platform compatibility
 - [ ] Web interface
-- [ ] Additional classifieds sources
-- [ ] Semantic analysis of listing descriptions
+- [ ] Semantic analysis of descriptions
 - [ ] Advanced filtering
-- [ ] Improved duplicate detection
+- [ ] Additional classifieds sources
 
 ## Responsible Use
 
