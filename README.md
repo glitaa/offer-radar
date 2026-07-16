@@ -16,7 +16,7 @@ Offer Radar solved that problem by keeping a local history of my decisions and s
 - **Interactive CLI:** Quickly review listings directly in your terminal.
 - **Cross-platform:** Works natively on Windows, macOS, and Linux.
 - **Local Database:** Stores which listings were saved, rejected or temporarily skipped.
-- **Session Management:** Save your progress and resume your search at any time.
+- **Search Sessions**: Preserve progress separately for different searches and resume them later.
 - **Multi-language Support:** The interface is currently available in English and Polish.
 
 ## Demo
@@ -91,13 +91,24 @@ The application fetches the matching listings, filters out offers that have alre
 ## Technology Stack
 
 - **Language**: [Python](https://www.python.org/) managed by [uv](https://github.com/astral-sh/uv)
-- **CLI & UI**: [Typer](https://typer.tiangolo.com/), [Questionary](https://questionary.readthedocs.io/), and [Rich](https://rich.readthedocs.io/) for an interactive terminal experience.
+- **CLI & UI**: [Typer](https://typer.tiangolo.com/) for commands, [Questionary](https://questionary.readthedocs.io/) for interactive menus, [Rich](https://rich.readthedocs.io/) for terminal output, and [Click](https://click.palletsprojects.com/) for cross-platform single-key input.
 - **Web Scraping**: [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/) and [HTTPX](https://www.python-httpx.org/) (for asynchronous requests).
 - **Database**: [SQLite](https://www.sqlite.org/) with [SQLAlchemy](https://www.sqlalchemy.org/) and `aiosqlite` for asynchronous database operations.
 - **Testing**: [pytest](https://docs.pytest.org/) and `pytest-asyncio`.
 - **Linting & Formatting**: [Ruff](https://docs.astral.sh/ruff/) for blazingly fast Python linting and formatting.
 - **Localization**: [Babel](https://babel.pocoo.org/) for managing and compiling translation files.
 - **CI/CD**: GitHub Actions (for automated tests, linting, and translation integrity checks) and Dependabot.
+
+## Architecture
+
+The application separates domain models and repository interfaces from application services and infrastructure implementations. This ensures the core workflow remains independent of SQLite, SQLAlchemy, and the scraper.
+
+The codebase is structured as follows:
+
+- [src/domain](src/domain) – models, rules, and repository interfaces,
+- [src/application](src/application) – search synchronization and session workflows,
+- [src/infrastructure](src/infrastructure) – database, settings and scraper implementations,
+- [src/cli](src/cli) – commands, menus and terminal presentation.
 
 ## Development
 
@@ -151,6 +162,8 @@ rm offer_radar.db
 ## Responsible Use
 
 Offer Radar is intended for personal and educational use. Use it responsibly, avoid excessive request rates, and make sure your usage complies with the terms and policies of the supported platform.
+
+To reduce load on the supported platform, requests are sent sequentially with random delays. Transient network failures are retried with exponential backoff, and synchronization stops gracefully after an HTTP 429 response while preserving listings collected so far.
 
 ## License
 
