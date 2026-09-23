@@ -1,13 +1,18 @@
+from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-from src.cli.main import run_loop
+from typer.testing import CliRunner
+
+from src.cli.main import app
+from src.cli.review import run_loop
 from src.domain.models import (
-    SearchSession,
     Offer,
-    OfferStatus,
-    OfferPrice,
     OfferCategory,
+    OfferPrice,
+    OfferStatus,
+    SearchSession,
 )
+
+runner = CliRunner()
 
 
 @pytest.mark.asyncio
@@ -58,11 +63,11 @@ async def test_cli_loop_actions():
 
     session_manager.get_unseen_offers.return_value = [offer1, offer2, offer3, offer4]
 
-    with patch("src.cli.main.click.getchar") as mock_getch:
+    with patch("src.cli.review.click.getchar") as mock_getch:
         # User presses 's' for offer1, 'r' for offer2, 'k' for offer3, 'q' for offer4
         mock_getch.side_effect = ["s", "r", "k", "q"]
 
-        with patch("src.cli.main.console.print") as mock_print:
+        with patch("src.cli.review.console.print") as mock_print:
             settings_repo_mock = MagicMock()
             await run_loop(session_manager, session, settings_repo_mock)
 
@@ -82,3 +87,9 @@ async def test_cli_loop_actions():
                 None,
             )
             assert summary_call is not None
+
+
+def test_cli_exclusive_options_error():
+    result = runner.invoke(app, ["--url", "https://olx.pl", "--query", "laptop"])
+    assert result.exit_code == 1
+    assert "Error: Please provide either --url or --query, not both." in result.output
