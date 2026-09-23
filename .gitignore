@@ -27,9 +27,10 @@ venv/
 env/
 .env/
 
-# SQLite
+# SQLite & Local Data
 *.sqlite3
 *.db
+/data/
 
 # OS
 .DS_Store
