@@ -43,6 +43,33 @@ def test_scraper_factory_build_search_url_no_scrapers():
         factory.build_search_url("laptop")
 
 
+def test_scraper_factory_multi_source_discovery_and_filtering():
+    s1 = MagicMock(spec=ScraperPort)
+    s1.source_name = "olx"
+    s1.build_search_url.return_value = "https://olx.pl/q-phone"
+
+    s2 = MagicMock(spec=ScraperPort)
+    s2.source_name = "otodom"
+    s2.build_search_url.return_value = "https://otodom.pl/q-phone"
+
+    factory = ScraperFactory([s1, s2])
+
+    assert factory.get_available_sources() == ["olx", "otodom"]
+    assert factory.get_scrapers() == [s1, s2]
+    assert factory.get_scrapers(["otodom"]) == [s2]
+    assert factory.get_scraper_by_source("olx") is s1
+    assert factory.get_scraper_by_source("nonexistent") is None
+
+    urls = factory.build_search_urls("phone", active_sources=["olx", "otodom"])
+    assert urls == [
+        ("olx", "https://olx.pl/q-phone"),
+        ("otodom", "https://otodom.pl/q-phone"),
+    ]
+
+    urls_single = factory.build_search_urls("phone", active_sources=["olx"])
+    assert urls_single == [("olx", "https://olx.pl/q-phone")]
+
+
 def test_create_default_scraper_factory():
     factory = create_default_scraper_factory()
     scraper = factory.get_scraper("https://www.olx.pl/praca/")
