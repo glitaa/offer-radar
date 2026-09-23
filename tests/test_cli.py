@@ -88,6 +88,20 @@ async def test_cli_loop_actions():
             )
             assert summary_call is not None
 
+            # Check that Source is displayed in the panel
+            panel_call = next(
+                (
+                    c
+                    for c in calls
+                    if c.args
+                    and hasattr(c.args[0], "renderable")
+                    and "Source:" in str(c.args[0].renderable)
+                    and "OLX" in str(c.args[0].renderable)
+                ),
+                None,
+            )
+            assert panel_call is not None
+
 
 def test_cli_exclusive_options_error():
     result = runner.invoke(app, ["--url", "https://olx.pl", "--query", "laptop"])
