@@ -1,13 +1,18 @@
-from typing import List
+from typing import List, Optional
 from src.domain.interfaces import ScraperPort
-from src.infrastructure.scrapers.olx_scraper import OlxScraper
 
 
 class ScraperFactory:
-    """Factory that auto-detects the appropriate scraper based on URL (D-06)."""
+    """Factory that routes URLs to the appropriate scraper and manages registered scrapers (D-06)."""
 
-    def __init__(self, scrapers: List[ScraperPort]):
-        self._scrapers = scrapers
+    def __init__(self, scrapers: Optional[List[ScraperPort]] = None):
+        self._scrapers: List[ScraperPort] = (
+            list(scrapers) if scrapers is not None else []
+        )
+
+    def register(self, scraper: ScraperPort) -> None:
+        """Register a scraper adapter with the factory."""
+        self._scrapers.append(scraper)
 
     def get_scraper(self, url: str) -> ScraperPort:
         """Return the first scraper that can handle the given URL."""
@@ -21,8 +26,3 @@ class ScraperFactory:
         if not self._scrapers:
             raise ValueError("No scrapers registered")
         return self._scrapers[0].build_search_url(query)
-
-    @classmethod
-    def create_default(cls) -> "ScraperFactory":
-        """Convenience method to create a factory with default scrapers registered."""
-        return cls([OlxScraper()])
