@@ -12,8 +12,11 @@ from rich.progress import (
     TaskProgressColumn,
     TimeElapsedColumn,
 )
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from src.infrastructure.database.orm_models import Base
+from src.infrastructure.database.config import (
+    get_engine,
+    get_session_factory,
+    init_db,
+)
 from src.infrastructure.repositories.search_session_repository import (
     SQLiteSearchSessionRepository,
 )
@@ -169,11 +172,10 @@ async def run_loop(
 
 
 async def main_async(url: Optional[str], query: Optional[str]):
-    engine = create_async_engine("sqlite+aiosqlite:///offer_radar.db", echo=False)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    engine = get_engine()
+    await init_db(engine)
 
-    async_session = async_sessionmaker(engine, expire_on_commit=False)
+    async_session = get_session_factory(engine)
 
     async with async_session() as session:
         session_repo = SQLiteSearchSessionRepository(session)

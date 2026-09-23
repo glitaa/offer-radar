@@ -133,16 +133,17 @@ uv run pybabel compile -d locales
 
 ## Data Storage
 
-Offer Radar stores its data locally in an SQLite database named `offer_radar.db`, located in the directory from which you run the application.
+Offer Radar stores its data locally in an SQLite database at `data/offer_radar.db`.
 
 The database stores:
 - **Offers**: Basic details of the listings you have processed (ID, URL, status).
 - **Search Sessions**: Your progress for specific URLs or queries, ensuring you don't review the same offers again.
 
 **Resetting Data:**
-To reset all your data and start fresh, simply delete the `offer_radar.db` file:
+To reset all your data and start fresh, run the reset script or delete the database file:
 ```bash
-rm offer_radar.db
+python scripts/reset_db.py
+# or: rm data/offer_radar.db
 ```
 
 ## Roadmap
