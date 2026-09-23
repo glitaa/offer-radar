@@ -32,13 +32,20 @@ async def test_search_session_and_offer_repositories(async_session):
     session_repo = SQLiteSearchSessionRepository(async_session)
     offer_repo = SQLiteOfferRepository(async_session)
 
-    session_model = SearchSession(search_url="https://olx.pl/praca/")
+    session_model = SearchSession(
+        search_url="https://olx.pl/praca/", query="praca warszawa"
+    )
     await session_repo.add(session_model)
     assert session_model.id is not None
 
     fetched_session = await session_repo.get_by_url("https://olx.pl/praca/")
     assert fetched_session is not None
     assert fetched_session.id == session_model.id
+    assert fetched_session.query == "praca warszawa"
+
+    by_query = await session_repo.get_by_query("praca warszawa")
+    assert by_query is not None
+    assert by_query.id == session_model.id
 
     offer = Offer(
         fingerprint="https://olx.pl/offer-1",
@@ -49,6 +56,7 @@ async def test_search_session_and_offer_repositories(async_session):
         location="Warszawa",
         description="Test description",
         extra_data={"contract": "B2B"},
+        source="otodom",
     )
     await offer_repo.add(offer)
     assert offer.id is not None
@@ -58,6 +66,7 @@ async def test_search_session_and_offer_repositories(async_session):
     assert fetched_offer.title == "Test Job"
     assert fetched_offer.status == OfferStatus.NEW
     assert fetched_offer.price == OfferPrice(price_min=1000.0, currency="PLN")
+    assert fetched_offer.source == "otodom"
     assert fetched_offer.location == "Warszawa"
     assert fetched_offer.description == "Test description"
     assert fetched_offer.extra_data == {"contract": "B2B"}

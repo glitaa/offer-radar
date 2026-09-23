@@ -34,7 +34,11 @@ async def main_async(url: Optional[str], query: Optional[str]) -> None:
         )
 
         search_session = await container.session_manager.start_session(search_param)
-        await sync_with_progress(container.session_manager, search_session)
+        await sync_with_progress(
+            container.session_manager,
+            search_session,
+            active_sources=settings.active_sources,
+        )
         await run_loop(
             container.session_manager, search_session, container.settings_repo
         )

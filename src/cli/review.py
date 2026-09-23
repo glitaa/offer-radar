@@ -1,3 +1,4 @@
+from typing import Optional, List
 import builtins
 import webbrowser
 import click
@@ -24,7 +25,9 @@ def _(x: str) -> str:
 
 
 async def sync_with_progress(
-    session_manager: SessionManager, session: SearchSession
+    session_manager: SessionManager,
+    session: SearchSession,
+    active_sources: Optional[List[str]] = None,
 ) -> None:
     """Synchronize offers for the session while displaying interactive progress in the console."""
     with Progress(
@@ -37,7 +40,7 @@ async def sync_with_progress(
         task_id = progress.add_task(_("[cyan]Syncing offers..."), total=1)
 
         async for progress_info in session_manager.sync_offers(
-            session.id, session.search_url
+            session, active_sources=active_sources
         ):
             progress.update(
                 task_id,
@@ -103,9 +106,11 @@ async def run_loop(
             if settings.auto_open_browser and offer.urls:
                 webbrowser.open(offer.urls[0].url)
 
+            source_display = (offer.source or "olx").upper()
             content = (
                 f"[bold]{price_label}:[/bold] {price_display}\n"
                 f"[bold]{_('Location')}:[/bold] {offer.location or _('N/A')}\n"
+                f"[bold]{_('Source')}:[/bold] {source_display}\n"
                 f"[bold]{_('URL')}:[/bold] {first_url}\n\n"
                 f"{snippet}\n\n"
                 f"[cyan](s) {_('Save')}  (r) {_('Reject')}  (k) {_('Skip')}  (q) {_('Quit')}[/cyan]"
@@ -153,7 +158,9 @@ async def run_loop(
         while True:
             key = click.getchar().lower()
             if key == "y":
-                await sync_with_progress(session_manager, session)
+                await sync_with_progress(
+                    session_manager, session, active_sources=settings.active_sources
+                )
                 break
             elif key == "n":
                 return

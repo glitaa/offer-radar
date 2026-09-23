@@ -10,6 +10,7 @@ class SearchSessionORM(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     search_url: Mapped[str] = mapped_column(String, unique=True, index=True)
+    query: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
 
     offers: Mapped[List["OfferORM"]] = relationship(
         back_populates="session", cascade="all, delete-orphan", lazy="selectin"
@@ -24,6 +25,7 @@ class OfferORM(Base):
     title: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String)
     session_id: Mapped[int] = mapped_column(Integer, ForeignKey("search_sessions.id"))
+    source: Mapped[Optional[str]] = mapped_column(String, nullable=True, default="olx")
 
     session: Mapped["SearchSessionORM"] = relationship(back_populates="offers")
     price_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

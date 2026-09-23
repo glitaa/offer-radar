@@ -1,4 +1,6 @@
 import builtins
+from typing import List, Optional
+
 import questionary
 from rich.console import Console
 import typer
@@ -15,7 +17,13 @@ def _(x: str) -> str:
 console = Console()
 
 
-async def run_settings_menu(settings_repo: SettingsRepository) -> None:
+async def run_settings_menu(
+    settings_repo: SettingsRepository,
+    available_sources: Optional[List[str]] = None,
+) -> None:
+    if available_sources is None:
+        available_sources = ["olx"]
+
     while True:
         settings = settings_repo.get_settings()
         lang_display = (
@@ -28,12 +36,14 @@ async def run_settings_menu(settings_repo: SettingsRepository) -> None:
         lang_text = _("Language: {lang}").format(lang=lang_display)
         auto_display = _("On") if settings.auto_open_browser else _("Off")
         browser_text = _("Auto-open browser: {auto}").format(auto=auto_display)
+        sources_display = ", ".join(s.upper() for s in settings.active_sources)
+        sources_text = _("Active sources: {sources}").format(sources=sources_display)
         back_text = _("Back")
 
         choice = await questionary.select(
             _("Settings Menu"),
             instruction=_("(Use arrow keys)"),
-            choices=[lang_text, browser_text, back_text],
+            choices=[lang_text, browser_text, sources_text, back_text],
         ).ask_async(kbi_msg=_("\nCancelled by user\n"))
 
         if choice == back_text or choice is None:
@@ -73,6 +83,33 @@ async def run_settings_menu(settings_repo: SettingsRepository) -> None:
                 except Exception as e:
                     console.print(f"[red]{_('Error saving settings')}: {e}[/red]")
 
+        elif choice == sources_text:
+            checkbox_choices = [
+                questionary.Choice(
+                    title=src.upper(),
+                    value=src,
+                    checked=src in settings.active_sources,
+                )
+                for src in available_sources
+            ]
+            new_sources = await questionary.checkbox(
+                _("Toggle active sources"),
+                instruction=_("(Use space to toggle, enter to confirm)"),
+                choices=checkbox_choices,
+            ).ask_async(kbi_msg=_("\nCancelled by user\n"))
+
+            if new_sources is not None:
+                if not new_sources:
+                    console.print(
+                        f"[yellow]{_('At least one source must remain active.')}[/yellow]"
+                    )
+                else:
+                    settings.active_sources = new_sources
+                    try:
+                        settings_repo.save_settings(settings)
+                    except Exception as e:
+                        console.print(f"[red]{_('Error saving settings')}: {e}[/red]")
+
 
 async def run_main_menu(
     session_manager: SessionManager,
@@ -107,7 +144,10 @@ async def run_main_menu(
                     name=session.display_name
                 )
             )
-            await sync_with_progress(session_manager, session)
+            settings = settings_repo.get_settings()
+            await sync_with_progress(
+                session_manager, session, active_sources=settings.active_sources
+            )
             await run_loop(session_manager, session, settings_repo)
 
         elif choice == _("Manage existing searches"):
@@ -140,7 +180,12 @@ async def run_main_menu(
                         name=selected_session.display_name
                     )
                 )
-                await sync_with_progress(session_manager, selected_session)
+                settings = settings_repo.get_settings()
+                await sync_with_progress(
+                    session_manager,
+                    selected_session,
+                    active_sources=settings.active_sources,
+                )
                 await run_loop(session_manager, selected_session, settings_repo)
 
             elif action == _("Delete search"):
@@ -162,7 +207,12 @@ async def run_main_menu(
                     )
 
         elif choice == _("Settings"):
-            await run_settings_menu(settings_repo)
+            available_sources = (
+                session_manager._scraper_factory.get_available_sources()
+                if hasattr(session_manager, "_scraper_factory")
+                else None
+            )
+            await run_settings_menu(settings_repo, available_sources=available_sources)
 
         else:
             console.print(

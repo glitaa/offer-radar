@@ -11,7 +11,9 @@ class SQLiteSearchSessionRepository(SearchSessionRepository):
         self.session = session
 
     async def add(self, session_obj: SearchSession) -> None:
-        orm_model = SearchSessionORM(search_url=session_obj.search_url)
+        orm_model = SearchSessionORM(
+            search_url=session_obj.search_url, query=session_obj.query
+        )
         self.session.add(orm_model)
         await self.session.commit()
         session_obj.id = orm_model.id
@@ -22,7 +24,24 @@ class SQLiteSearchSessionRepository(SearchSessionRepository):
         orm_model = result.scalar_one_or_none()
 
         if orm_model:
-            return SearchSession(id=orm_model.id, search_url=orm_model.search_url)
+            return SearchSession(
+                id=orm_model.id,
+                search_url=orm_model.search_url,
+                query=orm_model.query,
+            )
+        return None
+
+    async def get_by_query(self, query: str) -> Optional[SearchSession]:
+        stmt = select(SearchSessionORM).where(SearchSessionORM.query == query)
+        result = await self.session.execute(stmt)
+        orm_model = result.scalar_one_or_none()
+
+        if orm_model:
+            return SearchSession(
+                id=orm_model.id,
+                search_url=orm_model.search_url,
+                query=orm_model.query,
+            )
         return None
 
     async def get_all(self) -> list[SearchSession]:
@@ -30,7 +49,7 @@ class SQLiteSearchSessionRepository(SearchSessionRepository):
         result = await self.session.execute(stmt)
         orm_models = result.scalars().all()
         return [
-            SearchSession(id=model.id, search_url=model.search_url)
+            SearchSession(id=model.id, search_url=model.search_url, query=model.query)
             for model in orm_models
         ]
 

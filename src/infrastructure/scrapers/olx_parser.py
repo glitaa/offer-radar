@@ -174,6 +174,7 @@ def parse_offers_from_json(state: dict) -> list[Offer]:
                     description=description,
                     extra_data=extra_data,
                     urls=[OfferUrl(url=url)],
+                    source="olx",
                 )
                 offers.append(offer)
             except Exception as e:
@@ -218,6 +219,7 @@ def parse_offers_from_html(html: str) -> list[Offer]:
                     price=None,
                     category=None,
                     urls=[OfferUrl(url=url)],
+                    source="olx",
                 )
                 offers.append(offer)
             except Exception as e:

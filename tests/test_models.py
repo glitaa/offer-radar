@@ -1,4 +1,4 @@
-from src.domain.models import Offer, OfferPrice, Settings
+from src.domain.models import Offer, OfferPrice, SearchSession, Settings
 
 
 def test_offer_price_instantiation():
@@ -49,3 +49,27 @@ def test_settings_default_instantiation():
     settings = Settings()
     assert settings.language == "en"
     assert settings.auto_open_browser is True
+    assert settings.active_sources == ["olx"]
+
+
+def test_offer_source_attribute():
+    offer_default = Offer(title="Default source offer")
+    assert offer_default.source == "olx"
+
+    offer_custom = Offer(title="Custom source offer", source="otodom")
+    assert offer_custom.source == "otodom"
+
+
+def test_search_session_query_and_display_name():
+    session_with_query = SearchSession(
+        search_url="https://www.olx.pl/oferty/q-laptop/",
+        query="laptop dell",
+    )
+    assert session_with_query.query == "laptop dell"
+    assert session_with_query.display_name == "laptop dell"
+
+    session_url_only = SearchSession(
+        search_url="https://www.olx.pl/oferty/q-laptop-pro/",
+    )
+    assert session_url_only.query is None
+    assert session_url_only.display_name == "laptop pro"
