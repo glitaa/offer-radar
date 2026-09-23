@@ -26,6 +26,10 @@ class OlxScraper(ScraperPort):
 
     OLX_URL_PATTERN = re.compile(r"^https?://(?:www\.)?olx\.pl/")
 
+    @property
+    def source_name(self) -> str:
+        return "olx"
+
     def can_handle(self, url: str) -> bool:
         """Returns True if the URL belongs to OLX.pl."""
         return bool(self.OLX_URL_PATTERN.match(url))

@@ -30,6 +30,8 @@ class TOMLSettingsRepository(SettingsRepository):
                 settings.language = data["language"]
             if "auto_open_browser" in data:
                 settings.auto_open_browser = data["auto_open_browser"]
+            if "active_sources" in data and isinstance(data["active_sources"], list):
+                settings.active_sources = data["active_sources"]
 
             return settings
         except tomllib.TOMLDecodeError:
@@ -38,9 +40,11 @@ class TOMLSettingsRepository(SettingsRepository):
             return settings
 
     def save_settings(self, settings: Settings) -> None:
+        sources_str = ", ".join(f'"{s}"' for s in settings.active_sources)
         toml_content = (
             f'language = "{settings.language}"\n'
             f"auto_open_browser = {'true' if settings.auto_open_browser else 'false'}\n"
+            f"active_sources = [{sources_str}]\n"
         )
         with open(self.file_path, "w", encoding="utf-8") as f:
             f.write(toml_content)
