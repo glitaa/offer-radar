@@ -46,6 +46,7 @@ class Offer:
     urls: List[OfferUrl] = field(default_factory=list)
     fingerprint: str = ""
     category: Optional[OfferCategory] = None
+    source: str = "olx"
 
     def __post_init__(self):
         if self.fingerprint == "":
@@ -85,9 +86,12 @@ class Offer:
 class SearchSession:
     search_url: str
     id: Optional[int] = None
+    query: Optional[str] = None
 
     @property
     def display_name(self) -> str:
+        if self.query:
+            return self.query
         import urllib.parse
         import re
 
@@ -109,3 +113,4 @@ class SyncProgress:
 class Settings:
     language: str = "en"
     auto_open_browser: bool = True
+    active_sources: List[str] = field(default_factory=lambda: ["olx"])
