@@ -1,8 +1,10 @@
 import json
 import logging
 import re
+
 from bs4 import BeautifulSoup
-from src.domain.models import Offer, OfferStatus, OfferUrl, OfferPrice, OfferCategory
+
+from src.domain.models import Offer, OfferCategory, OfferPrice, OfferStatus, OfferUrl
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ def extract_prerendered_state(html: str) -> dict:
             return json.loads(state_str)
     except json.JSONDecodeError:
         logger.warning("Failed to decode JSON from __PRERENDERED_STATE__")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning(f"Error extracting __PRERENDERED_STATE__: {e}")
     return {}
 
@@ -177,10 +179,10 @@ def parse_offers_from_json(state: dict) -> list[Offer]:
                     source="olx",
                 )
                 offers.append(offer)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.warning(f"Error parsing individual offer from JSON: {e}")
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning(f"Error parsing offers from JSON: {e}")
 
     return offers
@@ -222,9 +224,9 @@ def parse_offers_from_html(html: str) -> list[Offer]:
                     source="olx",
                 )
                 offers.append(offer)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.warning(f"Error parsing individual offer from HTML: {e}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning(f"Error parsing offers from HTML: {e}")
 
     return offers
@@ -243,7 +245,7 @@ def extract_pagination_info(state: dict) -> dict:
                 "total_pages": total_pages,
                 "has_next": current_page < total_pages,
             }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning(f"Error extracting pagination info: {e}")
 
     return default_info

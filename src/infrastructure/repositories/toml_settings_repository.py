@@ -1,11 +1,6 @@
-import sys
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
+import tomllib
 from pathlib import Path
+
 from src.domain.interfaces import SettingsRepository
 from src.domain.models import Settings
 

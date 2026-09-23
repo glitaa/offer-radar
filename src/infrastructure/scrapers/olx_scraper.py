@@ -1,21 +1,22 @@
 import logging
 import re
+from collections.abc import AsyncGenerator
+
 import httpx
 
-from typing import AsyncGenerator, List, Tuple
 from src.domain.interfaces import ScraperPort
 from src.domain.models import Offer, SyncProgress
 from src.infrastructure.scrapers.base import (
     DEFAULT_HEADERS,
+    ScraperBlockedError,
     fetch_with_retry,
     polite_delay,
-    ScraperBlockedError,
 )
 from src.infrastructure.scrapers.olx_parser import (
-    extract_prerendered_state,
-    parse_offers_from_json,
-    parse_offers_from_html,
     extract_pagination_info,
+    extract_prerendered_state,
+    parse_offers_from_html,
+    parse_offers_from_json,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ class OlxScraper(ScraperPort):
 
     async def fetch_offers(
         self, url: str
-    ) -> AsyncGenerator[Tuple[SyncProgress, List[Offer]], None]:
+    ) -> AsyncGenerator[tuple[SyncProgress, list[Offer]]]:
         """
         Fetch and parse offers from the OLX URL iteratively.
         Handles pagination and implements graceful degradation on blocks.
@@ -131,7 +132,7 @@ class OlxScraper(ScraperPort):
                             f"Scraping blocked during pagination: {e}. Stopping iteration."
                         )
                         break
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001
                         # Log and continue to next page on other errors
                         logger.warning(f"Error processing page {current_page}: {e}")
                         continue

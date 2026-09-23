@@ -1,7 +1,7 @@
 import asyncio
 import random
+
 import httpx
-from typing import Tuple
 
 DEFAULT_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
@@ -20,16 +20,12 @@ MAX_RETRIES = 3
 class ScraperBlockedError(Exception):
     """Raised when the scraper encounters a 403 or 429 block (D-01)."""
 
-    pass
-
 
 class ScraperNetworkError(Exception):
     """Raised when the scraper encounters persistent network failures after retries."""
 
-    pass
 
-
-async def polite_delay(delay_range: Tuple[float, float] = DEFAULT_DELAY_RANGE) -> None:
+async def polite_delay(delay_range: tuple[float, float] = DEFAULT_DELAY_RANGE) -> None:
     """Sleep for a random duration between delay_range[0] and delay_range[1]."""
     await asyncio.sleep(random.uniform(*delay_range))
 

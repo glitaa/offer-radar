@@ -1,7 +1,7 @@
+from src.domain.models import Settings
 from src.infrastructure.repositories.toml_settings_repository import (
     TOMLSettingsRepository,
 )
-from src.domain.models import Settings
 
 
 def test_missing_file_creates_default(tmp_path):

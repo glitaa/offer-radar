@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import AsyncGenerator, List, Optional, Tuple
+from collections.abc import AsyncGenerator
+
 from .models import Offer, SearchSession, Settings, SyncProgress
 
 
@@ -9,15 +10,15 @@ class OfferRepository(ABC):
         pass
 
     @abstractmethod
-    async def add_batch(self, offers: List[Offer]) -> None:
+    async def add_batch(self, offers: list[Offer]) -> None:
         pass
 
     @abstractmethod
-    async def get_by_fingerprint(self, fingerprint: str) -> Optional[Offer]:
+    async def get_by_fingerprint(self, fingerprint: str) -> Offer | None:
         pass
 
     @abstractmethod
-    async def get_unseen_for_session(self, session_id: int) -> List[Offer]:
+    async def get_unseen_for_session(self, session_id: int) -> list[Offer]:
         pass
 
     @abstractmethod
@@ -35,15 +36,15 @@ class SearchSessionRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_url(self, url: str) -> Optional[SearchSession]:
+    async def get_by_url(self, url: str) -> SearchSession | None:
         pass
 
     @abstractmethod
-    async def get_by_query(self, query: str) -> Optional[SearchSession]:
+    async def get_by_query(self, query: str) -> SearchSession | None:
         pass
 
     @abstractmethod
-    async def get_all(self) -> List[SearchSession]:
+    async def get_all(self) -> list[SearchSession]:
         pass
 
     @abstractmethod
@@ -62,18 +63,16 @@ class ScraperPort(ABC):
     @abstractmethod
     def source_name(self) -> str:
         """Unique identifier of the classified portal (e.g. 'olx', 'otodom')."""
-        pass
 
     @abstractmethod
     async def fetch_offers(
         self, url: str
-    ) -> AsyncGenerator[Tuple[SyncProgress, List[Offer]], None]:
+    ) -> AsyncGenerator[tuple[SyncProgress, list[Offer]]]:
         """Fetch and parse offers from the given search URL.
 
         Yields (SyncProgress, List[Offer]) tuples per page. On partial failure,
         yields whatever was successfully scraped (D-01/D-05).
         """
-        pass
 
     @abstractmethod
     def can_handle(self, url: str) -> bool:
@@ -81,12 +80,10 @@ class ScraperPort(ABC):
 
         Used by ScraperFactory to route URLs to the correct adapter (D-06).
         """
-        pass
 
     @abstractmethod
     def build_search_url(self, query: str) -> str:
         """Build a portal search URL from a raw query term."""
-        pass
 
 
 class SettingsRepository(ABC):

@@ -1,9 +1,9 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.domain.interfaces import SearchSessionRepository
 from src.domain.models import SearchSession
 from src.infrastructure.database.orm_models import SearchSessionORM
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from typing import Optional
 
 
 class SQLiteSearchSessionRepository(SearchSessionRepository):
@@ -18,7 +18,7 @@ class SQLiteSearchSessionRepository(SearchSessionRepository):
         await self.session.commit()
         session_obj.id = orm_model.id
 
-    async def get_by_url(self, url: str) -> Optional[SearchSession]:
+    async def get_by_url(self, url: str) -> SearchSession | None:
         stmt = select(SearchSessionORM).where(SearchSessionORM.search_url == url)
         result = await self.session.execute(stmt)
         orm_model = result.scalar_one_or_none()
@@ -31,7 +31,7 @@ class SQLiteSearchSessionRepository(SearchSessionRepository):
             )
         return None
 
-    async def get_by_query(self, query: str) -> Optional[SearchSession]:
+    async def get_by_query(self, query: str) -> SearchSession | None:
         stmt = select(SearchSessionORM).where(SearchSessionORM.query == query)
         result = await self.session.execute(stmt)
         orm_model = result.scalar_one_or_none()

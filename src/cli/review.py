@@ -1,6 +1,6 @@
-from typing import Optional, List
 import builtins
 import webbrowser
+
 import click
 from rich.console import Console
 from rich.panel import Panel
@@ -27,7 +27,7 @@ def _(x: str) -> str:
 async def sync_with_progress(
     session_manager: SessionManager,
     session: SearchSession,
-    active_sources: Optional[List[str]] = None,
+    active_sources: list[str] | None = None,
 ) -> None:
     """Synchronize offers for the session while displaying interactive progress in the console."""
     with Progress(

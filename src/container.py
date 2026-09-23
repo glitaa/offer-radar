@@ -1,6 +1,7 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import AsyncGenerator, Optional
+
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from src.application.session_manager import SessionManager
@@ -31,9 +32,9 @@ class AppContainer:
 
 @asynccontextmanager
 async def create_app_container(
-    engine: Optional[AsyncEngine] = None,
-    settings_repo: Optional[SettingsRepository] = None,
-) -> AsyncGenerator[AppContainer, None]:
+    engine: AsyncEngine | None = None,
+    settings_repo: SettingsRepository | None = None,
+) -> AsyncGenerator[AppContainer]:
     """Assemble application services and dependencies within a managed lifecycle.
 
     If no engine is provided, creates and initializes the default database engine,

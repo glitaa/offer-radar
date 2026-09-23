@@ -1,5 +1,7 @@
-import pytest
 from pathlib import Path
+
+import pytest
+
 from src.infrastructure.database.config import (
     ensure_data_dir,
     get_engine,

@@ -2,7 +2,7 @@ import hashlib
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Dict, Any, List
+from typing import Any
 
 
 class OfferStatus(str, Enum):
@@ -19,11 +19,11 @@ class OfferCategory(str, Enum):
 
 @dataclass
 class OfferPrice:
-    price_min: Optional[float] = None
-    price_max: Optional[float] = None
-    currency: Optional[str] = None
-    period: Optional[str] = None
-    special_status: Optional[str] = None
+    price_min: float | None = None
+    price_max: float | None = None
+    currency: str | None = None
+    period: str | None = None
+    special_status: str | None = None
     is_free: bool = False
     is_negotiable: bool = False
 
@@ -37,15 +37,15 @@ class OfferUrl:
 class Offer:
     title: str
     status: OfferStatus = OfferStatus.NEW
-    id: Optional[int] = None
-    session_id: Optional[int] = None
-    price: Optional[OfferPrice] = None
-    location: Optional[str] = None
-    description: Optional[str] = None
-    extra_data: Optional[Dict[str, Any]] = None
-    urls: List[OfferUrl] = field(default_factory=list)
+    id: int | None = None
+    session_id: int | None = None
+    price: OfferPrice | None = None
+    location: str | None = None
+    description: str | None = None
+    extra_data: dict[str, Any] | None = None
+    urls: list[OfferUrl] = field(default_factory=list)
     fingerprint: str = ""
-    category: Optional[OfferCategory] = None
+    category: OfferCategory | None = None
     source: str = "olx"
 
     def __post_init__(self):
@@ -85,15 +85,15 @@ class Offer:
 @dataclass
 class SearchSession:
     search_url: str
-    id: Optional[int] = None
-    query: Optional[str] = None
+    id: int | None = None
+    query: str | None = None
 
     @property
     def display_name(self) -> str:
         if self.query:
             return self.query
-        import urllib.parse
         import re
+        import urllib.parse
 
         match = re.search(r"q-([^/?]+)", self.search_url)
         if match:
@@ -113,4 +113,4 @@ class SyncProgress:
 class Settings:
     language: str = "en"
     auto_open_browser: bool = True
-    active_sources: List[str] = field(default_factory=lambda: ["olx"])
+    active_sources: list[str] = field(default_factory=lambda: ["olx"])
