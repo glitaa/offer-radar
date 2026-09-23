@@ -39,6 +39,10 @@ class SearchSessionRepository(ABC):
         pass
 
     @abstractmethod
+    async def get_by_query(self, query: str) -> Optional[SearchSession]:
+        pass
+
+    @abstractmethod
     async def get_all(self) -> List[SearchSession]:
         pass
 
@@ -53,6 +57,12 @@ class ScraperPort(ABC):
     Implement this ABC to add a new scraper adapter. Register it in
     ScraperFactory so the factory can auto-detect it from a URL.
     """
+
+    @property
+    @abstractmethod
+    def source_name(self) -> str:
+        """Unique identifier of the classified portal (e.g. 'olx', 'otodom')."""
+        pass
 
     @abstractmethod
     async def fetch_offers(
