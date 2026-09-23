@@ -167,7 +167,6 @@ def parse_offers_from_json(state: dict) -> list[Offer]:
 
                 offer = Offer(
                     title=title,
-                    fingerprint=url,
                     status=OfferStatus.NEW,
                     price=price,
                     category=category,
@@ -215,7 +214,6 @@ def parse_offers_from_html(html: str) -> list[Offer]:
 
                 offer = Offer(
                     title=title,
-                    fingerprint=url,
                     status=OfferStatus.NEW,
                     price=None,
                     category=None,
