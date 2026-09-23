@@ -1,11 +1,13 @@
-import pytest
 import json
-from src.domain.models import OfferStatus, OfferCategory
+
+import pytest
+
+from src.domain.models import OfferCategory, OfferStatus
 from src.infrastructure.scrapers.olx_parser import (
-    extract_prerendered_state,
-    parse_offers_from_json,
-    parse_offers_from_html,
     extract_pagination_info,
+    extract_prerendered_state,
+    parse_offers_from_html,
+    parse_offers_from_json,
 )
 
 

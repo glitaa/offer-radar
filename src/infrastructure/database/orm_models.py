@@ -1,6 +1,5 @@
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, ForeignKey, Float, Boolean
-from typing import Optional, List
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 
 Base = declarative_base()
 
@@ -10,9 +9,9 @@ class SearchSessionORM(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     search_url: Mapped[str] = mapped_column(String, unique=True, index=True)
-    query: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
+    query: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
 
-    offers: Mapped[List["OfferORM"]] = relationship(
+    offers: Mapped[list["OfferORM"]] = relationship(
         back_populates="session", cascade="all, delete-orphan", lazy="selectin"
     )
 
@@ -25,22 +24,22 @@ class OfferORM(Base):
     title: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String)
     session_id: Mapped[int] = mapped_column(Integer, ForeignKey("search_sessions.id"))
-    source: Mapped[Optional[str]] = mapped_column(String, nullable=True, default="olx")
+    source: Mapped[str | None] = mapped_column(String, nullable=True, default="olx")
 
     session: Mapped["SearchSessionORM"] = relationship(back_populates="offers")
-    price_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    price_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    currency: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    period: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    special_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    price_min: Mapped[float | None] = mapped_column(Float, nullable=True)
+    price_max: Mapped[float | None] = mapped_column(Float, nullable=True)
+    currency: Mapped[str | None] = mapped_column(String, nullable=True)
+    period: Mapped[str | None] = mapped_column(String, nullable=True)
+    special_status: Mapped[str | None] = mapped_column(String, nullable=True)
     is_free: Mapped[bool] = mapped_column(Boolean, default=False)
     is_negotiable: Mapped[bool] = mapped_column(Boolean, default=False)
-    category: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    location: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    extra_data: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    category: Mapped[str | None] = mapped_column(String, nullable=True)
+    location: Mapped[str | None] = mapped_column(String, nullable=True)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
+    extra_data: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    urls: Mapped[List["OfferUrlORM"]] = relationship(
+    urls: Mapped[list["OfferUrlORM"]] = relationship(
         back_populates="offer", cascade="all, delete-orphan", lazy="selectin"
     )
 

@@ -1,8 +1,9 @@
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from src.domain.models import Offer, OfferPrice, OfferStatus, OfferUrl, SearchSession
 from src.infrastructure.database.orm_models import Base
-from src.domain.models import Offer, SearchSession, OfferStatus, OfferUrl, OfferPrice
 from src.infrastructure.repositories.offer_repository import SQLiteOfferRepository
 from src.infrastructure.repositories.search_session_repository import (
     SQLiteSearchSessionRepository,
@@ -121,7 +122,8 @@ async def test_add_batch_ignores_duplicates(async_session):
 
     await offer_repo.add_batch([offer_dup, offer_new])
 
-    from sqlalchemy import select, func
+    from sqlalchemy import func, select
+
     from src.infrastructure.database.orm_models import OfferORM
 
     stmt = select(func.count()).select_from(OfferORM)

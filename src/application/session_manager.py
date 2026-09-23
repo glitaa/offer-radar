@@ -1,7 +1,8 @@
-from typing import List, AsyncGenerator, Optional, Union
-from src.domain.interfaces import OfferRepository, SearchSessionRepository
+from collections.abc import AsyncGenerator
+
 from src.application.scraper_factory import ScraperFactory
-from src.domain.models import Offer, SearchSession, OfferStatus, SyncProgress
+from src.domain.interfaces import OfferRepository, SearchSessionRepository
+from src.domain.models import Offer, OfferStatus, SearchSession, SyncProgress
 
 
 class SessionManager:
@@ -43,10 +44,10 @@ class SessionManager:
 
     async def sync_offers(
         self,
-        session_or_id: Union[SearchSession, int],
-        url: Optional[str] = None,
-        active_sources: Optional[List[str]] = None,
-    ) -> AsyncGenerator[SyncProgress, None]:
+        session_or_id: SearchSession | int,
+        url: str | None = None,
+        active_sources: list[str] | None = None,
+    ) -> AsyncGenerator[SyncProgress]:
         # Handle int ID (backward-compatible signature: sync_offers(session_id, url))
         if isinstance(session_or_id, int):
             session_id = session_or_id
@@ -109,13 +110,13 @@ class SessionManager:
                     total_offers_found=total_found,
                 )
 
-    async def get_unseen_offers(self, session_id: int) -> List[Offer]:
+    async def get_unseen_offers(self, session_id: int) -> list[Offer]:
         return await self._offer_repo.get_unseen_for_session(session_id)
 
     async def mark_offer(self, offer_id: int, status: OfferStatus) -> None:
         await self._offer_repo.update_status(offer_id, status.value)
 
-    async def get_all_sessions(self) -> List[SearchSession]:
+    async def get_all_sessions(self) -> list[SearchSession]:
         return await self._session_repo.get_all()
 
     async def delete_session(self, session_id: int) -> None:

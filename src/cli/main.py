@@ -1,8 +1,8 @@
 import asyncio
 import builtins
-from typing import Optional
-from rich.console import Console
+
 import typer
+from rich.console import Console
 
 from src.cli.i18n import setup_i18n
 from src.cli.menu import run_main_menu
@@ -19,7 +19,7 @@ def _(x: str) -> str:
     return getattr(builtins, "_", lambda s: s)(x)
 
 
-async def main_async(url: Optional[str], query: Optional[str]) -> None:
+async def main_async(url: str | None, query: str | None) -> None:
     async with create_app_container() as container:
         settings = container.settings_repo.get_settings()
         builtins._ = setup_i18n(settings.language)
@@ -46,8 +46,8 @@ async def main_async(url: Optional[str], query: Optional[str]) -> None:
 
 @app.callback()
 def cli_main(
-    url: Optional[str] = typer.Option(None, "--url", help="Direct URL to OLX search"),
-    query: Optional[str] = typer.Option(None, "--query", help="Search query"),
+    url: str | None = typer.Option(None, "--url", help="Direct URL to OLX search"),
+    query: str | None = typer.Option(None, "--query", help="Search query"),
 ):
     if url and query:
         console.print(

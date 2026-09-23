@@ -1,11 +1,12 @@
-from src.domain.interfaces import OfferRepository
-from src.domain.models import Offer, OfferStatus, OfferUrl, OfferPrice, OfferCategory
-from src.infrastructure.database.orm_models import OfferORM, OfferUrlORM
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from typing import List, Optional
 import json
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from src.domain.interfaces import OfferRepository
+from src.domain.models import Offer, OfferCategory, OfferPrice, OfferStatus, OfferUrl
+from src.infrastructure.database.orm_models import OfferORM, OfferUrlORM
 
 
 class SQLiteOfferRepository(OfferRepository):
@@ -51,7 +52,7 @@ class SQLiteOfferRepository(OfferRepository):
         await self.session.commit()
         offer.id = orm_model.id
 
-    async def add_batch(self, offers: List[Offer]) -> None:
+    async def add_batch(self, offers: list[Offer]) -> None:
         if not offers:
             return
 
@@ -164,7 +165,7 @@ class SQLiteOfferRepository(OfferRepository):
             source=orm_model.source or "olx",
         )
 
-    async def get_by_fingerprint(self, fingerprint: str) -> Optional[Offer]:
+    async def get_by_fingerprint(self, fingerprint: str) -> Offer | None:
         stmt = (
             select(OfferORM)
             .where(OfferORM.fingerprint == fingerprint)
@@ -177,7 +178,7 @@ class SQLiteOfferRepository(OfferRepository):
             return self._map_orm_to_domain(orm_model)
         return None
 
-    async def get_unseen_for_session(self, session_id: int) -> List[Offer]:
+    async def get_unseen_for_session(self, session_id: int) -> list[Offer]:
         stmt = (
             select(OfferORM)
             .where(

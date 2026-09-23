@@ -1,6 +1,7 @@
-import pytest
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import httpx
-from unittest.mock import patch, MagicMock, AsyncMock
+import pytest
 
 from src.infrastructure.scrapers.olx_scraper import OlxScraper
 

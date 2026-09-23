@@ -1,9 +1,11 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from src.application.session_manager import SessionManager
-from src.domain.models import SearchSession, Offer, OfferUrl
+
+import pytest
+
 from src.application.scraper_factory import ScraperFactory
+from src.application.session_manager import SessionManager
 from src.domain.interfaces import ScraperPort
+from src.domain.models import Offer, OfferUrl, SearchSession
 
 
 @pytest.mark.asyncio

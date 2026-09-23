@@ -1,9 +1,8 @@
 import builtins
-from typing import List, Optional
 
 import questionary
-from rich.console import Console
 import typer
+from rich.console import Console
 
 from src.application.session_manager import SessionManager
 from src.cli.review import run_loop, sync_with_progress
@@ -19,7 +18,7 @@ console = Console()
 
 async def run_settings_menu(
     settings_repo: SettingsRepository,
-    available_sources: Optional[List[str]] = None,
+    available_sources: list[str] | None = None,
 ) -> None:
     if available_sources is None:
         available_sources = ["olx"]
@@ -65,7 +64,7 @@ async def run_settings_menu(
                     from src.cli.i18n import setup_i18n
 
                     builtins._ = setup_i18n(new_lang)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     console.print(f"[red]{_('Error saving settings')}: {e}[/red]")
 
         elif choice == browser_text:
@@ -80,7 +79,7 @@ async def run_settings_menu(
                 settings.auto_open_browser = new_val == choice_on
                 try:
                     settings_repo.save_settings(settings)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     console.print(f"[red]{_('Error saving settings')}: {e}[/red]")
 
         elif choice == sources_text:
@@ -107,7 +106,7 @@ async def run_settings_menu(
                     settings.active_sources = new_sources
                     try:
                         settings_repo.save_settings(settings)
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001
                         console.print(f"[red]{_('Error saving settings')}: {e}[/red]")
 
 

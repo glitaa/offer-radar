@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+
 from src.infrastructure.database.orm_models import Base
 
 DATA_DIR = Path("data")
@@ -20,7 +21,7 @@ def ensure_data_dir(target_dir: Path = DATA_DIR) -> Path:
     return target_dir
 
 
-def get_engine(url: Optional[str] = None) -> AsyncEngine:
+def get_engine(url: str | None = None) -> AsyncEngine:
     """Create and return an AsyncEngine, ensuring the parent directory exists if using SQLite."""
     db_url = url or DEFAULT_DATABASE_URL
     if "sqlite" in db_url and not db_url.endswith(":memory:"):
