@@ -93,6 +93,8 @@ def test_parse_offers_from_json(sample_state):
     assert job.description == "A full description"
     assert job.extra_data["extra"] == "some extra data"
     assert job.status == OfferStatus.NEW
+    assert job.fingerprint == job.compute_fingerprint()
+    assert job.fingerprint != job.urls[0].url
 
     re_listing = offers[1]
     assert re_listing.urls[0].url == "https://olx.pl/offer/2"
@@ -101,6 +103,8 @@ def test_parse_offers_from_json(sample_state):
     assert re_listing.price is not None
     assert re_listing.price.price_min == 1000
     assert re_listing.location == "Kraków"
+    assert re_listing.fingerprint == re_listing.compute_fingerprint()
+    assert re_listing.fingerprint != re_listing.urls[0].url
 
     partial = offers[2]
     assert partial.urls[0].url == "https://www.olx.pl/oferta/3"
@@ -108,6 +112,8 @@ def test_parse_offers_from_json(sample_state):
     assert partial.category is None
     assert partial.price is None
     assert partial.location is None
+    assert partial.fingerprint == partial.compute_fingerprint()
+    assert partial.fingerprint != partial.urls[0].url
 
 
 def test_extract_pagination_info(sample_state):
@@ -136,3 +142,35 @@ def test_parse_offers_from_html():
     assert len(offers) == 1
     assert offers[0].urls[0].url == "https://www.olx.pl/oferta/test"
     assert offers[0].title == "Test Listing"
+    assert offers[0].fingerprint == offers[0].compute_fingerprint()
+    assert offers[0].fingerprint != offers[0].urls[0].url
+
+
+def test_parse_offers_content_fingerprint_deduplication():
+    duplicate_state = {
+        "listing": {
+            "listing": {
+                "ads": [
+                    {
+                        "urlPath": "/oferta/apartment-var-a-ID1.html",
+                        "title": "Apartment for rent in center",
+                        "price": {"displayValue": "2500 PLN"},
+                        "location": {"cityName": "Warszawa"},
+                        "description": "Sunny two room apartment in center.",
+                    },
+                    {
+                        "urlPath": "/oferta/apartment-var-b-ID2.html?utm_source=promo",
+                        "title": "Apartment for rent in center",
+                        "price": {"displayValue": "2500 PLN"},
+                        "location": {"cityName": "Warszawa"},
+                        "description": "Sunny two room apartment in center.",
+                    },
+                ]
+            }
+        }
+    }
+    offers = parse_offers_from_json(duplicate_state)
+    assert len(offers) == 2
+    assert offers[0].urls[0].url != offers[1].urls[0].url
+    assert offers[0].fingerprint == offers[1].fingerprint
+    assert offers[0].fingerprint == offers[0].compute_fingerprint()

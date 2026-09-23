@@ -17,3 +17,14 @@ def test_scraper_factory_unsupported_url():
         factory.get_scraper("https://www.otodom.pl/wynajem")
 
     assert "No scraper available for URL" in str(exc.value)
+
+
+def test_scraper_factory_build_search_url():
+    factory = ScraperFactory.create_default()
+    assert factory.build_search_url("laptop") == "https://www.olx.pl/oferty/q-laptop/"
+
+
+def test_scraper_factory_build_search_url_no_scrapers():
+    factory = ScraperFactory([])
+    with pytest.raises(ValueError, match="No scrapers registered"):
+        factory.build_search_url("laptop")

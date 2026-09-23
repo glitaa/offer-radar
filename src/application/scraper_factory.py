@@ -16,6 +16,12 @@ class ScraperFactory:
                 return scraper
         raise ValueError(f"No scraper available for URL: {url}")
 
+    def build_search_url(self, query: str) -> str:
+        """Build a search URL using the default registered scraper."""
+        if not self._scrapers:
+            raise ValueError("No scrapers registered")
+        return self._scrapers[0].build_search_url(query)
+
     @classmethod
     def create_default(cls) -> "ScraperFactory":
         """Convenience method to create a factory with default scrapers registered."""

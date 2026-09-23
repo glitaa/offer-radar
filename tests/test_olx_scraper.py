@@ -129,3 +129,15 @@ async def test_fetch_with_retry_network_error(mock_get, mock_sleep, scraper):
         offers.extend(page_offers)
     assert len(offers) == 0
     assert mock_get.call_count == 3
+
+
+def test_olx_scraper_build_search_url(scraper):
+    assert scraper.build_search_url("laptop") == "https://www.olx.pl/oferty/q-laptop/"
+    assert (
+        scraper.build_search_url("laptop dell")
+        == "https://www.olx.pl/oferty/q-laptop-dell/"
+    )
+    assert (
+        scraper.build_search_url("  mieszkanie warszawa  ")
+        == "https://www.olx.pl/oferty/q-mieszkanie-warszawa/"
+    )
