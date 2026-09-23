@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -42,6 +43,18 @@ def get_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]
 
 
 async def init_db(engine: AsyncEngine) -> None:
-    """Initialize database schema by creating all registered tables."""
+    """Initialize database schema by creating all registered tables and ensuring columns exist."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+        # Ensure backward compatibility for SQLite columns added in newer versions
+        async def _ensure_column(connection, table: str, column: str, col_type: str):
+            result = await connection.execute(text(f"PRAGMA table_info({table})"))
+            columns = [row[1] for row in result.fetchall()]
+            if columns and column not in columns:
+                await connection.execute(
+                    text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+                )
+
+        await _ensure_column(conn, "search_sessions", "query", "VARCHAR")
+        await _ensure_column(conn, "offers", "source", "VARCHAR DEFAULT 'olx'")

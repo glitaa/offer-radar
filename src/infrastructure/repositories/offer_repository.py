@@ -33,6 +33,7 @@ class SQLiteOfferRepository(OfferRepository):
             title=offer.title,
             status=offer.status.value,
             session_id=offer.session_id,
+            source=offer.source or "olx",
             price_min=price_min,
             price_max=price_max,
             currency=currency,
@@ -160,6 +161,7 @@ class SQLiteOfferRepository(OfferRepository):
             extra_data=extra_data,
             urls=[OfferUrl(url=u.url) for u in orm_model.urls],
             category=offer_category,
+            source=orm_model.source or "olx",
         )
 
     async def get_by_fingerprint(self, fingerprint: str) -> Optional[Offer]:
