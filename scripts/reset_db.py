@@ -1,10 +1,9 @@
-import os
 import pathlib
 
-DB_PATH = pathlib.Path(__file__).parent.parent / "offer_radar.db"
+DB_PATH = pathlib.Path(__file__).parent.parent / "data" / "offer_radar.db"
 
 if DB_PATH.exists():
-    os.remove(DB_PATH)
+    DB_PATH.unlink()
     print(f"Removed database at {DB_PATH}")
 else:
     print(f"Database at {DB_PATH} not found.")
