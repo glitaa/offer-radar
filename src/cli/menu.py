@@ -1,17 +1,21 @@
-import typer
+import builtins
 import questionary
 from rich.console import Console
-import builtins
+import typer
+
+from src.application.session_manager import SessionManager
+from src.cli.review import run_loop, sync_with_progress
+from src.domain.interfaces import SettingsRepository
 
 
-def _(x):
+def _(x: str) -> str:
     return getattr(builtins, "_", lambda s: s)(x)
 
 
 console = Console()
 
 
-async def run_settings_menu(settings_repo):
+async def run_settings_menu(settings_repo: SettingsRepository) -> None:
     while True:
         settings = settings_repo.get_settings()
         lang_display = (
@@ -70,7 +74,10 @@ async def run_settings_menu(settings_repo):
                     console.print(f"[red]{_('Error saving settings')}: {e}[/red]")
 
 
-async def run_main_menu(session_manager, run_loop_cb, sync_cb, settings_repo):
+async def run_main_menu(
+    session_manager: SessionManager,
+    settings_repo: SettingsRepository,
+) -> None:
     while True:
         choice = await questionary.select(
             _("Offer-Radar"),
@@ -100,8 +107,8 @@ async def run_main_menu(session_manager, run_loop_cb, sync_cb, settings_repo):
                     name=session.display_name
                 )
             )
-            await sync_cb(session_manager, session)
-            await run_loop_cb(session_manager, session, settings_repo)
+            await sync_with_progress(session_manager, session)
+            await run_loop(session_manager, session, settings_repo)
 
         elif choice == _("Manage existing searches"):
             sessions = await session_manager.get_all_sessions()
@@ -133,8 +140,8 @@ async def run_main_menu(session_manager, run_loop_cb, sync_cb, settings_repo):
                         name=selected_session.display_name
                     )
                 )
-                await sync_cb(session_manager, selected_session)
-                await run_loop_cb(session_manager, selected_session, settings_repo)
+                await sync_with_progress(session_manager, selected_session)
+                await run_loop(session_manager, selected_session, settings_repo)
 
             elif action == _("Delete search"):
                 count = await session_manager.count_offers_for_session(
