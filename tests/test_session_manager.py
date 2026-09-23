@@ -11,19 +11,35 @@ async def test_session_manager_start_session():
     session_repo = AsyncMock()
     offer_repo = AsyncMock()
     scraper_factory = MagicMock(spec=ScraperFactory)
+    scraper_factory.build_search_url.return_value = (
+        "https://www.olx.pl/oferty/q-laptop/"
+    )
 
     manager = SessionManager(session_repo, offer_repo, scraper_factory)
 
-    # test query params mapping
+    # test query params mapping (delegates to scraper_factory.build_search_url)
     session_repo.get_by_url.return_value = None
     session_repo.add.return_value = None
 
     session = await manager.start_session("laptop")
     assert session.search_url == "https://www.olx.pl/oferty/q-laptop/"
+    scraper_factory.build_search_url.assert_called_once_with("laptop")
     session_repo.get_by_url.assert_called_with("https://www.olx.pl/oferty/q-laptop/")
     session_repo.add.assert_called_once()
 
-    # test retrieval
+    # test direct HTTP url (bypasses build_search_url)
+    scraper_factory.build_search_url.reset_mock()
+    session_repo.get_by_url.return_value = None
+    session_repo.add.reset_mock()
+
+    direct_url = "https://www.olx.pl/d/oferty/q-direct/"
+    session_direct = await manager.start_session(direct_url)
+    assert session_direct.search_url == direct_url
+    scraper_factory.build_search_url.assert_not_called()
+    session_repo.get_by_url.assert_called_with(direct_url)
+    session_repo.add.assert_called_once()
+
+    # test retrieval of existing session
     existing_session = SearchSession(
         search_url="https://www.olx.pl/oferty/q-laptop/", id=1
     )
