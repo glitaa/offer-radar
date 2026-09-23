@@ -2,7 +2,7 @@ import logging
 import re
 import httpx
 
-from typing import AsyncGenerator, Tuple
+from typing import AsyncGenerator, List, Tuple
 from src.domain.interfaces import ScraperPort
 from src.domain.models import Offer, SyncProgress
 from src.infrastructure.scrapers.base import (
@@ -30,9 +30,14 @@ class OlxScraper(ScraperPort):
         """Returns True if the URL belongs to OLX.pl."""
         return bool(self.OLX_URL_PATTERN.match(url))
 
+    def build_search_url(self, query: str) -> str:
+        """Build an OLX search URL from a raw query term."""
+        formatted_query = query.strip().replace(" ", "-")
+        return f"https://www.olx.pl/oferty/q-{formatted_query}/"
+
     async def fetch_offers(
         self, url: str
-    ) -> AsyncGenerator[Tuple[SyncProgress, list[Offer]], None]:
+    ) -> AsyncGenerator[Tuple[SyncProgress, List[Offer]], None]:
         """
         Fetch and parse offers from the OLX URL iteratively.
         Handles pagination and implements graceful degradation on blocks.

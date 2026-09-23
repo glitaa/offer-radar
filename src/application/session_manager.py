@@ -17,7 +17,7 @@ class SessionManager:
 
     async def start_session(self, url_or_params: str) -> SearchSession:
         if not url_or_params.startswith("http"):
-            url = f"https://www.olx.pl/oferty/q-{url_or_params}/"
+            url = self._scraper_factory.build_search_url(url_or_params)
         else:
             url = url_or_params
 

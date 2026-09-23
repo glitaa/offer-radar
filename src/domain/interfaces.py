@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
-from .models import Offer, SearchSession, Settings
+from typing import AsyncGenerator, List, Optional, Tuple
+from .models import Offer, SearchSession, Settings, SyncProgress
 
 
 class OfferRepository(ABC):
@@ -55,11 +55,13 @@ class ScraperPort(ABC):
     """
 
     @abstractmethod
-    async def fetch_offers(self, url: str) -> List[Offer]:
+    async def fetch_offers(
+        self, url: str
+    ) -> AsyncGenerator[Tuple[SyncProgress, List[Offer]], None]:
         """Fetch and parse offers from the given search URL.
 
-        Returns a list of Offer domain entities. On partial failure,
-        returns whatever was successfully scraped (D-01/D-05).
+        Yields (SyncProgress, List[Offer]) tuples per page. On partial failure,
+        yields whatever was successfully scraped (D-01/D-05).
         """
         pass
 
@@ -69,6 +71,11 @@ class ScraperPort(ABC):
 
         Used by ScraperFactory to route URLs to the correct adapter (D-06).
         """
+        pass
+
+    @abstractmethod
+    def build_search_url(self, query: str) -> str:
+        """Build a portal search URL from a raw query term."""
         pass
 
 
