@@ -1,11 +1,9 @@
-import json
-
-from sqlalchemy import select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.domain.interfaces import OfferRepository
-from src.domain.models import Offer, OfferCategory, OfferPrice, OfferStatus, OfferUrl
+from src.domain.models import Offer, OfferStatus
 from src.infrastructure.database.orm_models import OfferORM, OfferUrlORM
 
 
@@ -14,40 +12,7 @@ class SQLiteOfferRepository(OfferRepository):
         self.session = session
 
     async def add(self, offer: Offer) -> None:
-        extra_data_json = json.dumps(offer.extra_data) if offer.extra_data else None
-
-        # Create URLs
-        url_orms = [OfferUrlORM(url=u.url) for u in offer.urls]
-
-        price_min = offer.price.price_min if offer.price else None
-        price_max = offer.price.price_max if offer.price else None
-        currency = offer.price.currency if offer.price else None
-        period = offer.price.period if offer.price else None
-        special_status = offer.price.special_status if offer.price else None
-        is_free = offer.price.is_free if offer.price else False
-        is_negotiable = offer.price.is_negotiable if offer.price else False
-
-        category_str = offer.category.value if offer.category else None
-
-        orm_model = OfferORM(
-            fingerprint=offer.fingerprint,
-            title=offer.title,
-            status=offer.status.value,
-            session_id=offer.session_id,
-            source=offer.source or "olx",
-            price_min=price_min,
-            price_max=price_max,
-            currency=currency,
-            period=period,
-            special_status=special_status,
-            is_free=is_free,
-            is_negotiable=is_negotiable,
-            category=category_str,
-            location=offer.location,
-            description=offer.description,
-            extra_data=extra_data_json,
-            urls=url_orms,
-        )
+        orm_model = OfferORM.from_domain(offer)
         self.session.add(orm_model)
         await self.session.commit()
         offer.id = orm_model.id
@@ -119,91 +84,26 @@ class SQLiteOfferRepository(OfferRepository):
         # Commit any leftover additions from adding new URLs
         await self.session.commit()
 
-    def _map_orm_to_domain(self, orm_model: OfferORM) -> Offer:
-        extra_data = json.loads(orm_model.extra_data) if orm_model.extra_data else None
-
-        has_price = any(
-            [
-                orm_model.price_min is not None,
-                orm_model.price_max is not None,
-                orm_model.currency is not None,
-                orm_model.period is not None,
-                orm_model.special_status is not None,
-                orm_model.is_free,
-                orm_model.is_negotiable,
-            ]
-        )
-
-        offer_price = None
-        if has_price:
-            offer_price = OfferPrice(
-                price_min=orm_model.price_min,
-                price_max=orm_model.price_max,
-                currency=orm_model.currency,
-                period=orm_model.period,
-                special_status=orm_model.special_status,
-                is_free=orm_model.is_free,
-                is_negotiable=orm_model.is_negotiable,
-            )
-
-        offer_category = (
-            OfferCategory(orm_model.category) if orm_model.category else None
-        )
-
-        return Offer(
-            id=orm_model.id,
-            fingerprint=orm_model.fingerprint,
-            title=orm_model.title,
-            status=OfferStatus(orm_model.status),
-            session_id=orm_model.session_id,
-            price=offer_price,
-            location=orm_model.location,
-            description=orm_model.description,
-            extra_data=extra_data,
-            urls=[OfferUrl(url=u.url) for u in orm_model.urls],
-            category=offer_category,
-            source=orm_model.source or "olx",
-        )
-
     async def get_by_fingerprint(self, fingerprint: str) -> Offer | None:
-        stmt = (
-            select(OfferORM)
-            .where(OfferORM.fingerprint == fingerprint)
-            .options(selectinload(OfferORM.urls))
-        )
+        stmt = select(OfferORM).where(OfferORM.fingerprint == fingerprint)
         result = await self.session.execute(stmt)
         orm_model = result.scalar_one_or_none()
-
-        if orm_model:
-            return self._map_orm_to_domain(orm_model)
-        return None
+        return orm_model.to_domain() if orm_model else None
 
     async def get_unseen_for_session(self, session_id: int) -> list[Offer]:
-        stmt = (
-            select(OfferORM)
-            .where(
-                OfferORM.session_id == session_id,
-                OfferORM.status == OfferStatus.NEW.value,
-            )
-            .options(selectinload(OfferORM.urls))
+        stmt = select(OfferORM).where(
+            OfferORM.session_id == session_id,
+            OfferORM.status == OfferStatus.NEW.value,
         )
         result = await self.session.execute(stmt)
-        orm_models = result.scalars().all()
-
-        return [self._map_orm_to_domain(orm_model) for orm_model in orm_models]
+        return [orm_model.to_domain() for orm_model in result.scalars().all()]
 
     async def update_status(self, offer_id: int, status: str) -> None:
-        stmt = select(OfferORM).where(OfferORM.id == offer_id)
-        result = await self.session.execute(stmt)
-        orm_model = result.scalar_one_or_none()
-
-        if orm_model:
-            orm_model.status = status
-            await self.session.commit()
+        stmt = update(OfferORM).where(OfferORM.id == offer_id).values(status=status)
+        await self.session.execute(stmt)
+        await self.session.commit()
 
     async def count_for_session(self, session_id: int) -> int:
-        from sqlalchemy import func
-
         stmt = select(func.count(OfferORM.id)).where(OfferORM.session_id == session_id)
         result = await self.session.execute(stmt)
         return result.scalar() or 0
