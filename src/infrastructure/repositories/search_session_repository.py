@@ -11,9 +11,7 @@ class SQLiteSearchSessionRepository(SearchSessionRepository):
         self.session = session
 
     async def add(self, session_obj: SearchSession) -> None:
-        orm_model = SearchSessionORM(
-            search_url=session_obj.search_url, query=session_obj.query
-        )
+        orm_model = SearchSessionORM.from_domain(session_obj)
         self.session.add(orm_model)
         await self.session.commit()
         session_obj.id = orm_model.id
@@ -22,42 +20,21 @@ class SQLiteSearchSessionRepository(SearchSessionRepository):
         stmt = select(SearchSessionORM).where(SearchSessionORM.search_url == url)
         result = await self.session.execute(stmt)
         orm_model = result.scalar_one_or_none()
-
-        if orm_model:
-            return SearchSession(
-                id=orm_model.id,
-                search_url=orm_model.search_url,
-                query=orm_model.query,
-            )
-        return None
+        return orm_model.to_domain() if orm_model else None
 
     async def get_by_query(self, query: str) -> SearchSession | None:
         stmt = select(SearchSessionORM).where(SearchSessionORM.query == query)
         result = await self.session.execute(stmt)
         orm_model = result.scalar_one_or_none()
-
-        if orm_model:
-            return SearchSession(
-                id=orm_model.id,
-                search_url=orm_model.search_url,
-                query=orm_model.query,
-            )
-        return None
+        return orm_model.to_domain() if orm_model else None
 
     async def get_all(self) -> list[SearchSession]:
         stmt = select(SearchSessionORM)
         result = await self.session.execute(stmt)
-        orm_models = result.scalars().all()
-        return [
-            SearchSession(id=model.id, search_url=model.search_url, query=model.query)
-            for model in orm_models
-        ]
+        return [model.to_domain() for model in result.scalars().all()]
 
     async def delete(self, session_id: int) -> None:
-        stmt = select(SearchSessionORM).where(SearchSessionORM.id == session_id)
-        result = await self.session.execute(stmt)
-        orm_model = result.scalar_one_or_none()
-
+        orm_model = await self.session.get(SearchSessionORM, session_id)
         if orm_model:
             await self.session.delete(orm_model)
             await self.session.commit()

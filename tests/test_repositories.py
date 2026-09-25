@@ -211,3 +211,30 @@ async def test_add_batch_conflict_resolution_and_new_url(async_session):
     assert len(fetched_base.urls) == 2
     urls = {u.url for u in fetched_base.urls}
     assert urls == {"https://olx.pl/url-base-1", "https://olx.pl/url-base-2"}
+
+
+@pytest.mark.asyncio
+async def test_delete_session_cascades_offers(async_session):
+    session_repo = SQLiteSearchSessionRepository(async_session)
+    offer_repo = SQLiteOfferRepository(async_session)
+
+    session = SearchSession(search_url="https://olx.pl/delete-test", query="delete me")
+    await session_repo.add(session)
+    assert session.id is not None
+
+    offer = Offer(
+        fingerprint="fp-delete-target",
+        urls=[OfferUrl(url="https://olx.pl/delete-offer-1")],
+        title="Delete Target",
+        session_id=session.id,
+    )
+    await offer_repo.add(offer)
+
+    assert await offer_repo.count_for_session(session.id) == 1
+    assert await offer_repo.get_by_fingerprint("fp-delete-target") is not None
+
+    await session_repo.delete(session.id)
+
+    assert await session_repo.get_by_url("https://olx.pl/delete-test") is None
+    assert await offer_repo.get_by_fingerprint("fp-delete-target") is None
+    assert await offer_repo.count_for_session(session.id) == 0
